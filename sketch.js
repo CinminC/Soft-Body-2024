@@ -6,7 +6,6 @@ const { Vec2D, Rect } = toxi.geom;
 
 let physics;
 
-let font;
 let particles = [];
 let particles2 = [];
 let particles3 = [];
@@ -24,6 +23,8 @@ let theShader;
 let webGLCanvas
 let originalGraphics
 
+let obj
+
 var w = window.innerWidth,
   h = window.innerHeight;
 var r = w < h ? w / 10 : h / 10; // radius is a third of the smaller screen dimension
@@ -37,9 +38,234 @@ var NOISE_SCALE = 20; // the higher the softer
 var angy = 0;
 
 function preload() {
-  // font = loadFont("AvenirNextLTPro-Demi.otf");
   theShader = new p5.Shader(this.renderer, vert, frag)
+}
 
+class SoftBody {
+  constructor(args) {
+    let def = {
+      startPos: createVector(width / 2, 0),
+      radius: 100,
+      segment: 40,
+      particles: [],
+      bodyP: [],
+      innerP: [],
+      springs: [],
+      faceColor1: "#000",
+      faceColor2: "#000"
+    }
+    Object.assign(def, args)
+    Object.assign(this, def)
+  }
+  init() {
+    for (let t = 0 - PI / 2; t < (TAU - PI / 2); t += TAU / this.segment) {
+      let xx = this.startPos.x + this.radius * cos(t),
+        yy = this.startPos.y + this.radius * sin(t),
+        p = new Particle(xx, yy, "body");
+      this.bodyP.push(p);
+
+    }
+    // for (let o = 0; o < 5; o++) {
+
+    //   for (let r = 0; r < this.bodyP.length; r++) {
+
+    //     let spring1 = this.bodyP[r]
+    //     let spring2 = this.bodyP[(o + r) % this.bodyP.length];
+    //     this.springs.push(new Spring(spring1, spring2, bodySpringStrength / 50));
+    //   }
+    // }
+
+    for (let i = 1; i < 4; i++) {
+
+      // if (random(1) < 0.9) {
+      let a = this.bodyP[0];
+      let b = this.bodyP[i];
+      // let b = particles[(i + 1) % particles.length];
+      this.springs.push(new Spring(a, b, 0.005));
+      // }
+      // }
+
+    }
+    for (let i = this.bodyP.length - 4; i < this.bodyP.length; i++) {
+
+      // if (random(1) < 0.9) {
+      let a = this.bodyP[0];
+      let b = this.bodyP[i];
+      // let b = particles[(i + 1) % particles.length];
+      this.springs.push(new Spring(a, b, 0.005));
+      // }
+      // }
+
+    }
+    for (let i = 1; i < this.bodyP.length; i++) {
+      for (let j = i + 1; j < this.bodyP.length; j++) {
+        // if (i !== j) {
+        if (random(1) < 0.9) {
+          let a = this.bodyP[i];
+          let b = this.bodyP[j];
+          // let b = particles[(i + 1) % particles.length];
+          this.springs.push(new Spring(a, b, bodySpringStrength));
+          // }
+        }
+      }
+    }
+
+    for (let i of this.bodyP) this.particles.push(i);
+
+
+    // this.segment = int(this.segment / 2);
+    // for (let d = 0; d < TAU; d += TAU / this.segment) {
+    //   let tempX = this.startPos.x + (this.radius / 2) * cos(d),
+    //     tempY = this.startPos.y + (this.radius / 2) * sin(d),
+    //     p2 = new Particle(tempX, tempY, "body");
+    //   this.innerP.push(p2);
+    // }
+    // for (let i of this.innerP) this.particles.push(i);
+
+
+    // for (let i = 0; i < this.innerP.length; i++) {
+    //   let aa = this.innerP[i];
+    //   let bb = this.bodyP[i];
+    //   this.springs.push(new Spring(aa, bb, 2));
+
+    //   for (let j = i + 1; j < this.innerP.length; j++) {
+    //     if (i !== j) {
+    //       if (random(1) < 0.9) {
+    //         let a = this.innerP[i];
+    //         let b = this.innerP[j];
+    //         // let b = particles[(i + 1) % particles.length];
+    //         this.springs.push(new Spring(a, b, bodySpringStrength));
+    //       }
+    //     }
+    //   }
+    // }
+    // for (let j = 0; j < 5; j++) {
+    //   for (let f = 0; f < this.innerP.length; f++) {
+
+    //     let innerSpring1 = this.innerP[f],
+    //       innerSpring2 = this.innerP[(f + j) % this.innerP.length];
+    //     this.springs.push(
+    //       new Spring(innerSpring1, innerSpring2, 0.3)
+    //     );
+    //   }
+    // }
+
+    // for (let v = 0; v < this.bodyP.length; v++) {
+    //   let bp = this.bodyP[v],
+    //     ip = this.innerP[v];
+    //   this.springs.push(
+    //     new Spring(bp, ip, 200)
+    //   );
+    // }
+  }
+  display(graphics) {
+    graphics.push();
+    graphics.fill(this.faceColor1);
+    graphics.stroke("#282828");
+    graphics.strokeWeight(4);
+
+
+    graphics.beginShape();
+    for (var i = 0; i < this.bodyP.length; i++) {
+      graphics.curveVertex(this.bodyP[i].x, this.bodyP[i].y);
+      graphics.ellipse(this.bodyP[i].x, this.bodyP[i].y, 10)
+
+    }
+    // graphics.fill(255)
+    // graphics.ellipse(this.bodyP[0].x, this.bodyP[0].y, 10)
+
+    for (let i = 1; i < 4; i++) {
+      graphics.curveVertex(this.bodyP[i].x, this.bodyP[i].y)
+    }
+    graphics.endShape();
+
+    graphics.fill(this.faceColor2);
+
+    // for(let p of particles2) p.lock()
+    // for(let p of particles3) p.lock()
+
+    graphics.beginShape();
+    for (var i = 0; i < this.innerP.length; i++) {
+      graphics.curveVertex(this.innerP[i].x, this.innerP[i].y);
+    }
+    graphics.endShape();
+    graphics.pop();
+
+
+    for (let spring of this.springs) {
+      // spring.show(graphics);
+    }
+
+    // rectMode(CENTER)
+    // translate(this.p.x, this.p.y)
+    // fill(this.color)
+    // let useRadius = this.radius * this.r
+    // rect(0, 0, this.r, this.r, useRadius, useRadius)
+  }
+  mouse() {
+    if (mouseIsPressed) {
+      // particles[0].lock();
+      this.particles[0].x = mouseX;
+      this.particles[0].y = mouseY;
+      this.particles[0].unlock();
+      //     particles2[0].x = mouseX;
+      // particles2[0].y = mouseY;
+      // particles2[0].unlock();
+    }
+  }
+  // update() {
+  //   this.t++
+  //   this.modeNormalT++
+  //   this.r = lerp(this.r, this.targetR, 0.05)
+  //   this.radius = lerp(this.radius, this.targetRadius, 0.05)
+  //   this.color = lerpColor(this.color, this.targetColor, 0.05)
+
+  //   if (this.mode == "normal") {
+  //     if (this.modeNormalT < 280) {
+  //       this.targetR = 40
+  //       this.targetRadius = 0
+  //       this.targetColor = color('green')
+
+
+  //     }
+  //     if (this.modeNormalT > 280) {
+  //       this.targetRadius = 1
+  //     }
+  //     if (this.modeNormalT > 300) {
+  //       this.targetR = 0
+
+  //     }
+  //     if (this.modeNormalT > 400) {
+  //       this.modeNormalT = 0
+
+  //     }
+
+
+  //   } else if (this.mode == "active") {
+  //     this.targetColor = color("orange")
+  //     this.modeActiveT++
+  //     if (this.modeActiveT > 100) {
+  //       this.targetRadius = 1
+  //     }
+
+  //     if (this.modeActiveT > 150) {
+  //       this.targetR = 300
+  //     }
+  //     if (this.modeActiveT > 200) {
+  //       this.targetR = 0
+  //     }
+  //     if (this.modeActiveT > 300) {
+  //       this.modeActiveT = 0
+  //       this.mode = "normal"
+  //     }
+  //   }
+  //   print(this.mode)
+
+  // }
+  // setMode(mode) {
+  //   this.mode = mode
+  //   this.modeT = 0
+  // }
 }
 
 function setup() {
@@ -56,13 +282,22 @@ function setup() {
   physics.setDrag(0.05);
 
   physics.addBehavior(new GravityBehavior(new Vec2D(0, 0.2)));
-  new_ball(width / 2, height / 2 - 220);
+  // new_ball(width / 2, height / 2 - 220);
+
+
   faceColor1 = random(colors)
   faceColor2 = random(colors)
   while (faceColor1 == faceColor2) faceColor2 = random(colors)
   colliderColor1 = random(colors)
   colliderColor2 = random(colors)
   colliderColor3 = random(colors)
+
+  obj = new SoftBody({
+    startPos: createVector(width / 2, height / 2 - 220),
+    faceColor1: faceColor1,
+    faceColor2: faceColor2
+  })
+  obj.init()
   // new_rec(width/2,height/2-150)
   // new_rec(width/2,height/2)
   //   particles.push(new Particle(200, 100));
@@ -119,7 +354,6 @@ function new_ball(xx, yy) {
   //   springs.push(new Spring(particles[1], particles[4], 0.01));
 
   particles.push(new Particle(xx, yy, "body"));
-  particlesTemp.push(new Particle(xx, yy, "body"));
   // drawHeart(xx,yy,10)
   scribbleEllipse(xx, yy, 200, 200, particles);
   //   for (var a=0; a<TWO_PI;a+=TWO_PI/vertices_amount) {
@@ -142,6 +376,7 @@ function new_ball(xx, yy) {
   //     particles.push(particle);
   //     particlesTemp.push(particle);
   //   }
+
 
   eyes.push(new Particle(xx - r / 8, yy, "eyes"));
   eyes.push(new Particle(xx + r / 8, yy, "eyes"));
@@ -283,135 +518,88 @@ function draw() {
   originalGraphics.push();
   originalGraphics.strokeWeight(4);
   originalGraphics.stroke("#282828");
-  // originalGraphics.noStroke()
   originalGraphics.fill(colliderColor1);
-  // noStroke();
   originalGraphics.rect(70, height / 2, 220, height);
   originalGraphics.fill(colliderColor2);
   originalGraphics.ellipse(width / 2, height / 2 + 10, width * 0.8, 100);
   originalGraphics.fill(colliderColor3);
   originalGraphics.ellipse(width / 2, height / 2, width * 0.8, 100);
   originalGraphics.pop();
-  // strokeWeight(4);
-  // beginShape();
-  // stroke(112, 50, 126);
-  // fill(240, 99, 164);
-  // for (let particle of particles) {
-  //   curveVertex(particle.x, particle.y);
-  // }
-  // endShape(CLOSE);
 
-  originalGraphics.fill(faceColor1);
-  originalGraphics.stroke("#282828");
-  originalGraphics.strokeWeight(4);
-  // for (var i = 0; i < particles.length; i+=vertices_amount) {
-  //   beginShape();
-  //     for(var j= i; j<(i+vertices_amount);j++){
-  //       curveVertex(particles[j].x, particles[j].y);
-  //     }
-  //   endShape(CLOSE);
-  // }
-  originalGraphics.beginShape();
-  for (var i = 1; i < particles.length; i++) {
-    originalGraphics.curveVertex(particles[i].x, particles[i].y);
-  }
-  originalGraphics.endShape();
 
-  originalGraphics.push();
-  originalGraphics.strokeWeight(4);
-  originalGraphics.noFill();
-  originalGraphics.fill(faceColor2);
 
-  // for(let p of particles2) p.lock()
-  // for(let p of particles3) p.lock()
+  obj.display(originalGraphics)
+  obj.mouse()
 
-  originalGraphics.beginShape();
-  for (var i = 1; i < particles2.length; i++) {
-    originalGraphics.curveVertex(particles2[i].x, particles2[i].y);
-  }
-  originalGraphics.endShape();
-  originalGraphics.beginShape();
-  for (var i = 1; i < particles3.length; i++) {
-    originalGraphics.curveVertex(particles3[i].x, particles3[i].y);
-  }
-  originalGraphics.endShape();
-  originalGraphics.pop();
 
-  for (var i = 0; i < particles.length; i++) {
-    // particles[i].show();
-  }
-  let bodyStart = createVector(particles[1].x, particles[1].y);
-  let bodyEnd = createVector(
-    particles[int(particles.length / 2)].x,
-    particles[int(particles.length / 2)].y
-  );
-  particles[1].show();
-  particles[int(particles.length / 2)].show();
-  bodyAngle = atan2(bodyStart.y - bodyEnd.y, bodyStart.x - bodyEnd.x);
+  // let bodyStart = createVector(particles[1].x, particles[1].y);
+  // let bodyEnd = createVector(
+  //   particles[int(particles.length / 2)].x,
+  //   particles[int(particles.length / 2)].y
+  // );
+  // particles[1].show();
+  // particles[int(particles.length / 2)].show();
+  // bodyAngle = atan2(bodyStart.y - bodyEnd.y, bodyStart.x - bodyEnd.x);
 
   //draw hat
-  originalGraphics.push();
-  originalGraphics.translate(bodyStart.x, bodyStart.y);
-  originalGraphics.rotate(bodyAngle + PI / 2);
-  originalGraphics.stroke("#282828");
-  originalGraphics.strokeWeight(4);
+  // originalGraphics.push();
+  // originalGraphics.translate(bodyStart.x, bodyStart.y);
+  // originalGraphics.rotate(bodyAngle + PI / 2);
+  // originalGraphics.stroke("#282828");
+  // originalGraphics.strokeWeight(4);
 
-  originalGraphics.fill(random(colors));
-  originalGraphics.arc(0, 0, 50, 50, PI, 0);
-  originalGraphics.fill(random(colors));
-  originalGraphics.arc(0, 0, 30, 50, PI, 0);
-  originalGraphics.fill(random(colors));
-  originalGraphics.arc(0, 0, 10, 50, PI, 0);
+  // originalGraphics.fill(random(colors));
+  // originalGraphics.arc(0, 0, 50, 50, PI, 0);
+  // originalGraphics.fill(random(colors));
+  // originalGraphics.arc(0, 0, 30, 50, PI, 0);
+  // originalGraphics.fill(random(colors));
+  // originalGraphics.arc(0, 0, 10, 50, PI, 0);
 
-  originalGraphics.strokeCap(ROUND);
-  originalGraphics.fill(random(colors));
-  originalGraphics.strokeWeight(6);
-  originalGraphics.line(-25, 0, 25, 0);
-  originalGraphics.strokeWeight(4);
-  originalGraphics.line(0, -25, 0, -35);
+  // originalGraphics.strokeCap(ROUND);
+  // originalGraphics.fill(random(colors));
+  // originalGraphics.strokeWeight(6);
+  // originalGraphics.line(-25, 0, 25, 0);
+  // originalGraphics.strokeWeight(4);
+  // originalGraphics.line(0, -25, 0, -35);
 
-  originalGraphics.translate(0, -35)
-  originalGraphics.rotate(PI / 2)
-  originalGraphics.fill(random(colors));
+  // originalGraphics.translate(0, -35)
+  // originalGraphics.rotate(PI / 2)
+  // originalGraphics.fill(random(colors));
 
-  originalGraphics.beginShape();
-  originalGraphics.strokeWeight(1);
-  originalGraphics.vertex(0, 0);
-  originalGraphics.quadraticVertex(6, 10, 0, 12);
-  originalGraphics.quadraticVertex(-6, 10, 0, 0);
-  originalGraphics.endShape(CLOSE);
+  // originalGraphics.beginShape();
+  // originalGraphics.strokeWeight(1);
+  // originalGraphics.vertex(0, 0);
+  // originalGraphics.quadraticVertex(6, 10, 0, 12);
+  // originalGraphics.quadraticVertex(-6, 10, 0, 0);
+  // originalGraphics.endShape(CLOSE);
 
-  originalGraphics.beginShape();
-  originalGraphics.strokeWeight(1);
-  originalGraphics.vertex(0, 0);
-  originalGraphics.quadraticVertex(6, -10, 0, -12);
-  originalGraphics.quadraticVertex(-6, -10, 0, 0);
-  originalGraphics.endShape(CLOSE);
-  originalGraphics.pop();
-  for (var i = 0; i < eyes.length; i++) {
-    eyes[i].show();
-  }
+  // originalGraphics.beginShape();
+  // originalGraphics.strokeWeight(1);
+  // originalGraphics.vertex(0, 0);
+  // originalGraphics.quadraticVertex(6, -10, 0, -12);
+  // originalGraphics.quadraticVertex(-6, -10, 0, 0);
+  // originalGraphics.endShape(CLOSE);
+  // originalGraphics.pop();
+  // for (var i = 0; i < eyes.length; i++) {
+  //   eyes[i].show();
+  // }
 
-  for (var i = 0; i < springs.length; i++) {
-    springs[i].show();
-  }
+  // for (var i = 0; i < springs.length; i++) {
+  //   springs[i].show();
+  // }
 
-  //   if (mouseIsPressed) {
-  //    print( particles[0])
-  //   }
 
-  if (mouseIsPressed) {
-    // particles[0].lock();
-    particles[0].x = mouseX;
-    particles[0].y = mouseY;
-    particles[0].unlock();
-    //     particles2[0].x = mouseX;
-    // particles2[0].y = mouseY;
-    // particles2[0].unlock();
-  }
-  // strokeWeight(1)
-  // noFill()
-  // scribblePureEllipse(width/2,height/2,200,200)
+
+  // if (mouseIsPressed) {
+  //   // particles[0].lock();
+  //   particles[0].x = mouseX;
+  //   particles[0].y = mouseY;
+  //   particles[0].unlock();
+  //   //     particles2[0].x = mouseX;
+  //   // particles2[0].y = mouseY;
+  //   // particles2[0].unlock();
+  // }
+
 
   image(originalGraphics, 0, 0, width, height)
 
