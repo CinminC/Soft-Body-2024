@@ -13,11 +13,11 @@ let springs = [];
 let springs2 = [];
 let eyes = [];
 let bodyAngle;
-let bodySpringStrength = 0.0003; //0.0002, 0.00005
+let bodySpringStrength = 0.003; //0.0002, 0.00005
 
 let colors = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
 let faceColor1, faceColor2, colliderColor1, colliderColor2, colliderColor3
-let emotion
+let eyesType = ['Ellipse', 'Circle']
 
 let theShader;
 let webGLCanvas
@@ -50,74 +50,96 @@ class SoftBody {
       particles: [],
       bodyP: [],
       innerP: [],
+      eyesP: [],
       springs: [],
       faceColor1: "#000",
-      faceColor2: "#000"
+      faceColor2: "#000",
+      eyesDist: 10,
+      eyesType: "Ellipse",
+      eyeAngleLerp: 0
     }
     Object.assign(def, args)
     Object.assign(this, def)
   }
   init() {
+    //setup body points
+    this.bodyP.push(new Particle(this.startPos.x, this.startPos.y));
     for (let t = 0 - PI / 2; t < (TAU - PI / 2); t += TAU / this.segment) {
-      let xx = this.startPos.x + this.radius * cos(t),
-        yy = this.startPos.y + this.radius * sin(t),
-        p = new Particle(xx, yy, "body");
+      let fluctuation = noise(t * 120, t * 50) * 10;
+
+      let xx = this.startPos.x + (this.radius + fluctuation) * cos(t),
+        yy = this.startPos.y + (this.radius + fluctuation) * sin(t),
+        p = new Particle(xx, yy);
       this.bodyP.push(p);
 
     }
-    // for (let o = 0; o < 5; o++) {
 
-    //   for (let r = 0; r < this.bodyP.length; r++) {
+    //set up body springs (top drag)
+    // for (let i = 1; i < 4; i++) {
 
-    //     let spring1 = this.bodyP[r]
-    //     let spring2 = this.bodyP[(o + r) % this.bodyP.length];
-    //     this.springs.push(new Spring(spring1, spring2, bodySpringStrength / 50));
-    //   }
+    //   // if (random(1) < 0.9) {
+    //   let a = this.bodyP[0];
+    //   let b = this.bodyP[i];
+    //   // let b = particles[(i + 1) % particles.length];
+    //   this.springs.push(new Spring(a, b, 0.04));
+    //   // }
+    //   // }
+
     // }
 
-    for (let i = 1; i < 4; i++) {
+    // for (let i = this.bodyP.length - 4; i < this.bodyP.length; i++) {
 
-      // if (random(1) < 0.9) {
-      let a = this.bodyP[0];
-      let b = this.bodyP[i];
-      // let b = particles[(i + 1) % particles.length];
-      this.springs.push(new Spring(a, b, 0.005));
-      // }
-      // }
+    //   // if (random(1) < 0.9) {
+    //   let a = this.bodyP[0];
+    //   let b = this.bodyP[i];
+    //   // let b = particles[(i + 1) % particles.length];
+    //   this.springs.push(new Spring(a, b, 0.04));
+    //   // }
+    //   // }
+    // }
 
-    }
-    for (let i = this.bodyP.length - 4; i < this.bodyP.length; i++) {
-
-      // if (random(1) < 0.9) {
-      let a = this.bodyP[0];
-      let b = this.bodyP[i];
-      // let b = particles[(i + 1) % particles.length];
-      this.springs.push(new Spring(a, b, 0.005));
-      // }
-      // }
-
-    }
+    //set up body springs 
     for (let i = 1; i < this.bodyP.length; i++) {
+      //center & every
+      let a = this.bodyP[0];
+      let b = this.bodyP[i];
+      this.springs.push(new Spring(a, b, bodySpringStrength));
+
+      //except center
       for (let j = i + 1; j < this.bodyP.length; j++) {
-        // if (i !== j) {
-        if (random(1) < 0.9) {
-          let a = this.bodyP[i];
-          let b = this.bodyP[j];
-          // let b = particles[(i + 1) % particles.length];
-          this.springs.push(new Spring(a, b, bodySpringStrength));
-          // }
+        if (i !== j) {
+          if (random(1) < 0.9) {
+            let a1 = this.bodyP[i];
+            let b1 = this.bodyP[j];
+            // let b = particles[(i + 1) % particles.length];
+            this.springs.push(new Spring(a1, b1, bodySpringStrength));
+          }
         }
       }
     }
 
+
     for (let i of this.bodyP) this.particles.push(i);
+
+
+    //setup eyes points
+    this.eyesP.push(new Particle(this.startPos.x - this.eyesDist, this.startPos.y));
+    this.eyesP.push(new Particle(this.startPos.x + this.eyesDist, this.startPos.y));
+
+    //set up eyes springs
+    this.springs.push(new Spring(this.eyesP[0], this.eyesP[1], bodySpringStrength));
+    for (let i of this.bodyP) {
+      this.springs.push(new Spring(i, this.eyesP[0], bodySpringStrength));
+      this.springs.push(new Spring(i, this.eyesP[1], bodySpringStrength));
+    }
+
 
 
     // this.segment = int(this.segment / 2);
     // for (let d = 0; d < TAU; d += TAU / this.segment) {
     //   let tempX = this.startPos.x + (this.radius / 2) * cos(d),
     //     tempY = this.startPos.y + (this.radius / 2) * sin(d),
-    //     p2 = new Particle(tempX, tempY, "body");
+    //     p2 = new Particle(tempX, tempY);
     //   this.innerP.push(p2);
     // }
     // for (let i of this.innerP) this.particles.push(i);
@@ -159,16 +181,26 @@ class SoftBody {
     // }
   }
   display(graphics) {
+    let bodyStart = createVector(this.bodyP[1].x, this.bodyP[1].y);
+    let bodyEnd = createVector(
+      this.bodyP[int(this.bodyP.length / 2) + 1].x,
+      this.bodyP[int(this.bodyP.length / 2) + 1].y
+    );
+    bodyAngle = atan2(bodyStart.y - bodyEnd.y, bodyStart.x - bodyEnd.x);
+    graphics.ellipse(bodyStart.x, bodyStart.y, 15)
+    graphics.ellipse(bodyEnd.x, bodyEnd.y, 15)
+
+    graphics.stroke("#282828");
+    graphics.strokeWeight(this.radius / 30);
+
+    //draw body
     graphics.push();
     graphics.fill(this.faceColor1);
-    graphics.stroke("#282828");
-    graphics.strokeWeight(4);
-
 
     graphics.beginShape();
-    for (var i = 0; i < this.bodyP.length; i++) {
+    for (var i = 1; i < this.bodyP.length; i++) {
       graphics.curveVertex(this.bodyP[i].x, this.bodyP[i].y);
-      graphics.ellipse(this.bodyP[i].x, this.bodyP[i].y, 10)
+      // graphics.ellipse(this.bodyP[i].x, this.bodyP[i].y, 50)
 
     }
     // graphics.fill(255)
@@ -178,32 +210,90 @@ class SoftBody {
       graphics.curveVertex(this.bodyP[i].x, this.bodyP[i].y)
     }
     graphics.endShape();
-
-    graphics.fill(this.faceColor2);
-
-    // for(let p of particles2) p.lock()
-    // for(let p of particles3) p.lock()
-
-    graphics.beginShape();
-    for (var i = 0; i < this.innerP.length; i++) {
-      graphics.curveVertex(this.innerP[i].x, this.innerP[i].y);
-    }
-    graphics.endShape();
     graphics.pop();
+
+    //draw eyes
+    let eyeMid = createVector((this.eyesP[0].x + this.eyesP[1].x) / 2, this.eyesP[0].y)
+    let eyeAngle = 0;
+    let eyeMove = map(dist(mouseX, mouseY, width / 2, height / 2),
+      0, width / 2, 0, this.eyesDist * 0.285)
+    if (dist(mouseX, mouseY, width / 2, height / 2) > width / 4) {
+      eyeAngle = atan2(mouseY - eyeMid.y, mouseX - eyeMid.x);
+    } else {
+      eyeAngle = 0
+    }
+    this.eyeAngleLerp = lerp(this.eyeAngleLerp, eyeAngle, 0.05)
+
+    if (this.eyesType == "Ellipse") {
+      graphics.push();
+      graphics.translate(this.eyesP[0].x, this.eyesP[0].y)
+      graphics.rotate(bodyAngle + PI / 2)
+      // graphics.fill(255)
+      // graphics.ellipse(0, 0, this.eyesDist * 1.5, this.eyesDist * 1.8)
+
+      // graphics.fill("#282828")
+      // graphics.rotate(-(bodyAngle + PI / 2))
+      // graphics.rotate(eyeAngle)
+      // graphics.translate(this.eyesDist * 0.25, 0)
+      // graphics.ellipse(0, 0, this.eyesDist * 1, this.eyesDist * 1)
+      // graphics.pop();
+      graphics.push();
+      graphics.clip(() => {
+        graphics.ellipse(0, 0, this.eyesDist * 1.5, this.eyesDist * 1.8)
+      });
+      graphics.fill(255)
+      graphics.ellipse(0, 0, this.eyesDist * 1.8, this.eyesDist * 1.8)
+      graphics.fill("#282828")
+      graphics.noStroke()
+      graphics.rotate(-(bodyAngle + PI / 2))
+      graphics.rotate(this.eyeAngleLerp)
+      graphics.translate(eyeMove, 0)
+      graphics.ellipse(0, 0, this.eyesDist * 1.1, this.eyesDist * 1.2)
+      graphics.pop();
+      graphics.noFill()
+      graphics.ellipse(0, 0, this.eyesDist * 1.5, this.eyesDist * 1.8)
+      graphics.pop();
+
+      graphics.push();
+      graphics.translate(this.eyesP[1].x, this.eyesP[1].y)
+      graphics.rotate(bodyAngle + PI / 2)
+
+      graphics.push();
+      graphics.clip(() => {
+        graphics.ellipse(0, 0, this.eyesDist * 1.5, this.eyesDist * 1.8)
+      });
+      graphics.fill(255)
+      graphics.ellipse(0, 0, this.eyesDist * 1.8, this.eyesDist * 1.8)
+      graphics.fill("#282828")
+      graphics.noStroke()
+      graphics.rotate(-(bodyAngle + PI / 2))
+      graphics.rotate(this.eyeAngleLerp)
+      graphics.translate(eyeMove, 0)
+      graphics.ellipse(0, 0, this.eyesDist * 1.1, this.eyesDist * 1.2)
+      graphics.pop();
+      graphics.noFill()
+      graphics.ellipse(0, 0, this.eyesDist * 1.5, this.eyesDist * 1.8)
+      graphics.pop();
+
+    }
+
 
 
     for (let spring of this.springs) {
       // spring.show(graphics);
     }
 
-    // rectMode(CENTER)
-    // translate(this.p.x, this.p.y)
-    // fill(this.color)
-    // let useRadius = this.radius * this.r
-    // rect(0, 0, this.r, this.r, useRadius, useRadius)
   }
   mouse() {
     if (mouseIsPressed) {
+      // let dTop = dist(this.particles[0].x, this.particles[0].y, mouseX, mouseY)
+      // let dBottom = dist(this.particles[int(this.particles.length / 2)].x, this.particles[int(this.particles.length / 2)].y, mouseX, mouseY)
+      // let moveP = this.particles[0]
+      // if (dTop > dBottom) {
+      //   moveP = this.particles[0]
+      // } else if (dTop < dBottom) {
+      //   moveP = this.particles[int(this.particles.length / 2)]
+      // }
       // particles[0].lock();
       this.particles[0].x = mouseX;
       this.particles[0].y = mouseY;
@@ -213,77 +303,21 @@ class SoftBody {
       // particles2[0].unlock();
     }
   }
-  // update() {
-  //   this.t++
-  //   this.modeNormalT++
-  //   this.r = lerp(this.r, this.targetR, 0.05)
-  //   this.radius = lerp(this.radius, this.targetRadius, 0.05)
-  //   this.color = lerpColor(this.color, this.targetColor, 0.05)
-
-  //   if (this.mode == "normal") {
-  //     if (this.modeNormalT < 280) {
-  //       this.targetR = 40
-  //       this.targetRadius = 0
-  //       this.targetColor = color('green')
-
-
-  //     }
-  //     if (this.modeNormalT > 280) {
-  //       this.targetRadius = 1
-  //     }
-  //     if (this.modeNormalT > 300) {
-  //       this.targetR = 0
-
-  //     }
-  //     if (this.modeNormalT > 400) {
-  //       this.modeNormalT = 0
-
-  //     }
-
-
-  //   } else if (this.mode == "active") {
-  //     this.targetColor = color("orange")
-  //     this.modeActiveT++
-  //     if (this.modeActiveT > 100) {
-  //       this.targetRadius = 1
-  //     }
-
-  //     if (this.modeActiveT > 150) {
-  //       this.targetR = 300
-  //     }
-  //     if (this.modeActiveT > 200) {
-  //       this.targetR = 0
-  //     }
-  //     if (this.modeActiveT > 300) {
-  //       this.modeActiveT = 0
-  //       this.mode = "normal"
-  //     }
-  //   }
-  //   print(this.mode)
-
-  // }
-  // setMode(mode) {
-  //   this.mode = mode
-  //   this.modeT = 0
-  // }
 }
 
 function setup() {
-  // createCanvas(600, 960);
-  createCanvas(360, 640);
-  // frameRate(8)
+  createCanvas(windowHeight, windowHeight);
 
   physics = new VerletPhysics2D();
 
-  let bounds = new Rect(0, 0, width, (height * 2) / 4);
-  let bounds2 = new Rect(width / 2, height / 2 + 150, 600, 200);
+  let bounds = new Rect(0, 0, width, (height * 2) / 3);
+  // let bounds2 = new Rect(width / 2, height / 2 + 150, 600, 200);
   physics.setWorldBounds(bounds);
   // physics.setWorldBounds(bounds2);
   physics.setDrag(0.05);
 
   physics.addBehavior(new GravityBehavior(new Vec2D(0, 0.2)));
   // new_ball(width / 2, height / 2 - 220);
-
 
   faceColor1 = random(colors)
   faceColor2 = random(colors)
@@ -292,31 +326,16 @@ function setup() {
   colliderColor2 = random(colors)
   colliderColor3 = random(colors)
 
+  let size = width * 0.31
   obj = new SoftBody({
     startPos: createVector(width / 2, height / 2 - 220),
+    radius: size,
+    segment: 28,
     faceColor1: faceColor1,
-    faceColor2: faceColor2
+    faceColor2: faceColor2,
+    eyesDist: size / 4
   })
   obj.init()
-  // new_rec(width/2,height/2-150)
-  // new_rec(width/2,height/2)
-  //   particles.push(new Particle(200, 100));
-  //   particles.push(new Particle(400, 100));
-  //   particles.push(new Particle(350, 200));
-  //   particles.push(new Particle(400, 300));
-  //   particles.push(new Particle(200, 300));
-  //   particles.push(new Particle(250, 200));
-
-  //   springs.push(new Spring(particles[0], particles[1], 0.01));
-  //   springs.push(new Spring(particles[1], particles[2], 0.01));
-  //   springs.push(new Spring(particles[2], particles[3], 0.01));
-  //   springs.push(new Spring(particles[3], particles[4], 0.01));
-  //   springs.push(new Spring(particles[4], particles[5], 0.01));
-  //   springs.push(new Spring(particles[5], particles[0], 0.01));
-  //   springs.push(new Spring(particles[5], particles[2], 1));
-  //   springs.push(new Spring(particles[0], particles[3], 0.01));
-  //   springs.push(new Spring(particles[1], particles[4], 0.01));
-  // particles.push(new Particle(0, 0));
 
   webGLCanvas = createGraphics(width, height, WEBGL)
   originalGraphics = createGraphics(width, height)
@@ -353,7 +372,7 @@ function new_ball(xx, yy) {
   //   springs.push(new Spring(particles[0], particles[3], 0.01));
   //   springs.push(new Spring(particles[1], particles[4], 0.01));
 
-  particles.push(new Particle(xx, yy, "body"));
+  particles.push(new Particle(xx, yy));
   // drawHeart(xx,yy,10)
   scribbleEllipse(xx, yy, 200, 200, particles);
   //   for (var a=0; a<TWO_PI;a+=TWO_PI/vertices_amount) {
@@ -378,11 +397,11 @@ function new_ball(xx, yy) {
   //   }
 
 
-  eyes.push(new Particle(xx - r / 8, yy, "eyes"));
-  eyes.push(new Particle(xx + r / 8, yy, "eyes"));
-  eyes.push(new Particle(xx - r / 8, yy - r / 16, "eyeBrow"));
-  eyes.push(new Particle(xx + r / 8, yy - r / 16, "eyeBrow"));
-  eyes.push(new Particle(xx, yy + r / 16, "mouth"));
+  eyes.push(new Particle(xx - r / 8, yy));
+  eyes.push(new Particle(xx + r / 8, yy));
+  eyes.push(new Particle(xx - r / 8, yy - r / 16));
+  eyes.push(new Particle(xx + r / 8, yy - r / 16));
+  eyes.push(new Particle(xx, yy + r / 16));
 
   // for (var i = 0; i < points.length; i++) {
   //   let pt = points[i];
@@ -425,7 +444,7 @@ function new_ball(xx, yy) {
     }
   }
 
-  particles2.push(new Particle(xx, yy, "body"));
+  particles2.push(new Particle(xx, yy));
   stroke(0);
   scribbleEllipse(xx, yy, 120, 120, particles2);
   for (let i = 0; i < particles2.length; i++) {
@@ -479,24 +498,13 @@ function new_rec(x, y) {
 }
 
 function draw() {
-  //   	webGLCanvas.shader(theShader)
-  // 	theShader.setUniform('u_resolution',[width/1000,height/1000])
-  // 	theShader.setUniform('u_time',millis()/1000)
-  // 	theShader.setUniform('u_mouse',[mouseX/width,mouseY/height])
-  // 	theShader.setUniform('u_tex',originalGraphics)
-
-  // 	webGLCanvas.clear()
-
-  // 	webGLCanvas.rect(-width/2,-height/2,width,height)
-
-  //   fill(127);
-  //   stroke(0);
-  //   strokeWeight(4);
-  //   beginShape();
-  //   for (let particle of particles) {
-  //     vertex(particle.x, particle.y);
-  //   }
-  //   endShape(CLOSE);
+  webGLCanvas.shader(theShader)
+  theShader.setUniform('u_resolution', [width / 1000, height / 1000])
+  theShader.setUniform('u_time', millis() / 1000)
+  theShader.setUniform('u_mouse', [mouseX / width, mouseY / height])
+  theShader.setUniform('u_tex', originalGraphics)
+  webGLCanvas.clear()
+  webGLCanvas.rect(-width / 2, -height / 2, width, height)
 
   //   for (let particle of particles) {
   //     particle.show();
@@ -510,20 +518,20 @@ function draw() {
   originalGraphics.background("#EAE7D6");
   originalGraphics.stroke(200)
   originalGraphics.strokeWeight(0.5)
-  // let span=5
-  // for(let i=0;i<width;i+=span){
-  //   originalGraphics.line(i,0,i,height)
-  // }
+  let span = 5
+  for (let i = 0; i < width; i += span) {
+    originalGraphics.line(i, 0, i, height)
+  }
 
   originalGraphics.push();
   originalGraphics.strokeWeight(4);
   originalGraphics.stroke("#282828");
   originalGraphics.fill(colliderColor1);
-  originalGraphics.rect(70, height / 2, 220, height);
+  originalGraphics.rect(width / 2 - 200, height * 2 / 3, 400, height);
   originalGraphics.fill(colliderColor2);
-  originalGraphics.ellipse(width / 2, height / 2 + 10, width * 0.8, 100);
+  originalGraphics.ellipse(width / 2, height * 2 / 3 + 10, width * 0.8, 100);
   originalGraphics.fill(colliderColor3);
-  originalGraphics.ellipse(width / 2, height / 2, width * 0.8, 100);
+  originalGraphics.ellipse(width / 2, height * 2 / 3, width * 0.8, 100);
   originalGraphics.pop();
 
 
@@ -601,7 +609,7 @@ function draw() {
   // }
 
 
-  image(originalGraphics, 0, 0, width, height)
+  image(webGLCanvas, 0, 0, width, height)
 
 }
 
