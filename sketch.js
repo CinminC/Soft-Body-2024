@@ -17,7 +17,7 @@ let bodySpringStrength = 0.003; //0.0002, 0.00005
 
 let colors = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
 let faceColor1, faceColor2, colliderColor1, colliderColor2, colliderColor3
-let eyesType = ['Ellipse', 'Circle']
+let eyesType = ['Ellipse', 'Circle', 'Squint', 'Half', 'HalfStare', 'Bright', 'Shiny']
 
 let theShader;
 let webGLCanvas
@@ -55,8 +55,10 @@ class SoftBody {
       faceColor1: "#000",
       faceColor2: "#000",
       eyesDist: 10,
-      eyesType: "Ellipse",
-      eyeAngleLerp: 0
+      eyesType: "Shiny",
+      eyeAngleLerp: 0,
+      eyeSizeRandom: 1,
+      eyeSizeRandom2: 1
     }
     Object.assign(def, args)
     Object.assign(this, def)
@@ -64,7 +66,7 @@ class SoftBody {
   init() {
     //setup body points
     this.bodyP.push(new Particle(this.startPos.x, this.startPos.y));
-    for (let t = 0 - PI / 2; t < (TAU - PI / 2); t += TAU / this.segment) {
+    for (let t = 0; t < (TAU); t += TAU / this.segment) {
       let fluctuation = noise(t * 120, t * 50) * 10;
 
       let xx = this.startPos.x + (this.radius + fluctuation) * cos(t),
@@ -187,13 +189,16 @@ class SoftBody {
       this.bodyP[int(this.bodyP.length / 2) + 1].y
     );
     bodyAngle = atan2(bodyStart.y - bodyEnd.y, bodyStart.x - bodyEnd.x);
+
+    graphics.fill(255, 0, 0)
     graphics.ellipse(bodyStart.x, bodyStart.y, 15)
-    graphics.ellipse(bodyEnd.x, bodyEnd.y, 15)
+    graphics.fill(0, 255, 0)
+    graphics.ellipse(bodyEnd.x, bodyEnd.y, 10)
 
     graphics.stroke("#282828");
     graphics.strokeWeight(this.radius / 30);
 
-    //draw body
+    //---draw body
     graphics.push();
     graphics.fill(this.faceColor1);
 
@@ -212,7 +217,8 @@ class SoftBody {
     graphics.endShape();
     graphics.pop();
 
-    //draw eyes
+    //---draw eyes
+    let eyeBase = this.radius / 4
     let eyeMid = createVector((this.eyesP[0].x + this.eyesP[1].x) / 2, this.eyesP[0].y)
     let eyeAngle = 0;
     let eyeMove = map(dist(mouseX, mouseY, width / 2, height / 2),
@@ -222,59 +228,224 @@ class SoftBody {
     } else {
       eyeAngle = 0
     }
+    let blinkScale = ((frameCount) % 150 < 5 || (frameCount) % 455 < 5) ? 0.1 : 1
     this.eyeAngleLerp = lerp(this.eyeAngleLerp, eyeAngle, 0.05)
 
     if (this.eyesType == "Ellipse") {
       graphics.push();
       graphics.translate(this.eyesP[0].x, this.eyesP[0].y)
-      graphics.rotate(bodyAngle + PI / 2)
+      graphics.rotate(bodyAngle)
       // graphics.fill(255)
       // graphics.ellipse(0, 0, this.eyesDist * 1.5, this.eyesDist * 1.8)
 
       // graphics.fill("#282828")
-      // graphics.rotate(-(bodyAngle + PI / 2))
+      // graphics.rotate(-(bodyAngle))
       // graphics.rotate(eyeAngle)
       // graphics.translate(this.eyesDist * 0.25, 0)
       // graphics.ellipse(0, 0, this.eyesDist * 1, this.eyesDist * 1)
       // graphics.pop();
       graphics.push();
       graphics.clip(() => {
-        graphics.ellipse(0, 0, this.eyesDist * 1.5, this.eyesDist * 1.8)
+        graphics.ellipse(0, 0, eyeBase * 1.5, eyeBase * 1.8)
       });
       graphics.fill(255)
-      graphics.ellipse(0, 0, this.eyesDist * 1.8, this.eyesDist * 1.8)
+      graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
       graphics.fill("#282828")
       graphics.noStroke()
-      graphics.rotate(-(bodyAngle + PI / 2))
+      graphics.rotate(-(bodyAngle))
       graphics.rotate(this.eyeAngleLerp)
       graphics.translate(eyeMove, 0)
-      graphics.ellipse(0, 0, this.eyesDist * 1.1, this.eyesDist * 1.2)
+      graphics.ellipse(0, 0, eyeBase * 1.1, eyeBase * 1.2)
       graphics.pop();
       graphics.noFill()
-      graphics.ellipse(0, 0, this.eyesDist * 1.5, this.eyesDist * 1.8)
+      graphics.ellipse(0, 0, eyeBase * 1.5, eyeBase * 1.8)
       graphics.pop();
 
       graphics.push();
       graphics.translate(this.eyesP[1].x, this.eyesP[1].y)
-      graphics.rotate(bodyAngle + PI / 2)
+      graphics.rotate(bodyAngle)
 
       graphics.push();
       graphics.clip(() => {
-        graphics.ellipse(0, 0, this.eyesDist * 1.5, this.eyesDist * 1.8)
+        graphics.ellipse(0, 0, eyeBase * 1.5, eyeBase * 1.8)
       });
       graphics.fill(255)
-      graphics.ellipse(0, 0, this.eyesDist * 1.8, this.eyesDist * 1.8)
+      graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
       graphics.fill("#282828")
       graphics.noStroke()
-      graphics.rotate(-(bodyAngle + PI / 2))
+      graphics.rotate(-(bodyAngle))
       graphics.rotate(this.eyeAngleLerp)
       graphics.translate(eyeMove, 0)
-      graphics.ellipse(0, 0, this.eyesDist * 1.1, this.eyesDist * 1.2)
+      graphics.ellipse(0, 0, eyeBase * 1.1, eyeBase * 1.2)
       graphics.pop();
       graphics.noFill()
-      graphics.ellipse(0, 0, this.eyesDist * 1.5, this.eyesDist * 1.8)
+      graphics.ellipse(0, 0, eyeBase * 1.5, eyeBase * 1.8)
       graphics.pop();
 
+    } else if (this.eyesType == "Circle") {
+      let eyeSize = map(this.eyeSizeRandom, 0, 1, eyeBase * 0.8, eyeBase * 1.1)
+      for (let i = 0; i < 2; i++) {
+        graphics.push();
+        graphics.translate(this.eyesP[i].x, this.eyesP[i].y)
+        // graphics.translate(this.eyesP[0].x - eyeBase / 2, this.eyesP[0].y - eyeBase / 3)
+        graphics.rotate(bodyAngle)
+        graphics.push();
+        graphics.clip(() => {
+          graphics.ellipse(0, 0, eyeBase * 1.5, eyeBase * 1.5)
+        });
+        graphics.fill(255)
+        graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
+        graphics.fill("#282828")
+        graphics.noStroke()
+        graphics.rotate(-(bodyAngle))
+        graphics.rotate(this.eyeAngleLerp)
+        graphics.translate(eyeMove, 0)
+        graphics.ellipse(0, 0, eyeSize, eyeSize * 1.09)
+        graphics.pop();
+        //outline
+        graphics.noFill()
+        graphics.ellipse(0, 0, eyeBase * 1.5, eyeBase * 1.5)
+        graphics.pop();
+      }
+    } else if (this.eyesType == "Squint") {
+      let eyeSize = map(this.eyeSizeRandom, 0, 1, eyeBase * 0.7, eyeBase * 1.05)
+      let eyeY = map(this.eyeSizeRandom2, 0, 1, eyeBase * 0.4, eyeBase * 0.7)
+      for (let i = 0; i < 2; i++) {
+        graphics.push();
+        graphics.translate(this.eyesP[i].x, this.eyesP[i].y)
+        // graphics.translate(this.eyesP[0].x - eyeBase / 2, this.eyesP[0].y - eyeBase / 3)
+        graphics.rotate(bodyAngle)
+        graphics.push();
+        graphics.clip(() => {
+          graphics.ellipse(0, 0, eyeBase * 1.5, eyeY)
+        });
+        graphics.fill(255)
+        graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
+        graphics.fill("#282828")
+        graphics.noStroke()
+        graphics.rotate(-(bodyAngle))
+        graphics.rotate(this.eyeAngleLerp)
+        graphics.translate(eyeMove, 0)
+        graphics.ellipse(0, 0, eyeSize, eyeSize * 1.09)
+        graphics.pop();
+        //outline
+        graphics.noFill()
+        graphics.ellipse(0, 0, eyeBase * 1.5, eyeY)
+        graphics.pop();
+      }
+    } else if (this.eyesType == "Half") {
+      let eyeSize = map(this.eyeSizeRandom, 0, 1, eyeBase * 0.8, eyeBase * 1.1)
+      for (let i = 0; i < 2; i++) {
+        graphics.push();
+        graphics.translate(this.eyesP[i].x, this.eyesP[i].y)
+        // graphics.translate(this.eyesP[0].x - eyeBase / 2, this.eyesP[0].y - eyeBase / 3)
+        graphics.rotate(bodyAngle)
+        graphics.push();
+        graphics.clip(() => {
+          graphics.arc(0, 0, eyeBase * 1.5, eyeBase * 1.5, PI - PI / 8, PI / 8)
+        });
+        graphics.fill(255)
+        graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
+        graphics.fill("#282828")
+        graphics.noStroke()
+        graphics.rotate(-(bodyAngle))
+        graphics.rotate(this.eyeAngleLerp)
+        graphics.translate(eyeMove, 0)
+        graphics.ellipse(0, 0, eyeSize, eyeSize * 1.09)
+        graphics.pop();
+        //outline
+        graphics.noFill()
+        graphics.arc(0, 0, eyeBase * 1.5, eyeBase * 1.5, PI - PI / 8, PI / 8, CHORD)
+        graphics.pop();
+      }
+    } else if (this.eyesType == "HalfStare") {
+      let eyeSize = map(this.eyeSizeRandom, 0, 1, eyeBase * 0.8, eyeBase * 1.1)
+      for (let i = 0; i < 2; i++) {
+        graphics.push();
+        graphics.translate(this.eyesP[i].x, this.eyesP[i].y)
+        // graphics.translate(this.eyesP[0].x - eyeBase / 2, this.eyesP[0].y - eyeBase / 3)
+        graphics.rotate(bodyAngle)
+        graphics.push();
+        graphics.clip(() => {
+          graphics.arc(0, 0, eyeBase * 1.5, eyeBase * 1.5, -PI / 8, PI + PI / 8)
+        });
+        graphics.fill(255)
+        graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
+        graphics.fill("#282828")
+        graphics.noStroke()
+        graphics.rotate(-(bodyAngle))
+        graphics.rotate(this.eyeAngleLerp)
+        graphics.translate(eyeMove, 0)
+        graphics.ellipse(0, 0, eyeSize, eyeSize * 1.09)
+        graphics.pop();
+        //outline
+        graphics.noFill()
+        graphics.arc(0, 0, eyeBase * 1.5, eyeBase * 1.5, -PI / 8, PI + PI / 8, CHORD)
+        graphics.pop();
+      }
+    } else if (this.eyesType == "Bright") {
+      let eyeSize = map(this.eyeSizeRandom, 0, 1, eyeBase * 0.8, eyeBase * 1.1)
+
+      for (let i = 0; i < 2; i++) {
+        let eyeSize = eyeBase * map(this.eyeSizeRandom, 0, 1, 0.75, 1)
+        graphics.push();
+        graphics.translate(this.eyesP[i].x, this.eyesP[i].y)
+        // graphics.translate(this.eyesP[0].x - eyeBase / 2, this.eyesP[0].y - eyeBase / 3)
+        graphics.rotate(bodyAngle)
+        graphics.push();
+        graphics.clip(() => {
+          graphics.ellipse(0, 0, eyeSize * 1, eyeSize * 1.1)
+        });
+        graphics.fill(255)
+        graphics.ellipse(0, 0, eyeSize * 1.8, eyeSize * 1.8)
+        graphics.stroke("#282828")
+        graphics.strokeWeight(this.radius * 0.05)
+        graphics.noFill()
+        graphics.rotate(-(bodyAngle))
+        graphics.rotate(this.eyeAngleLerp + PI / 2)
+        graphics.ellipse(0, -eyeSize * 0.15, eyeSize * 1, eyeSize * 0.8)
+        graphics.pop();
+        //outline
+        graphics.strokeWeight(this.radius * 0.04)
+        graphics.noFill()
+        graphics.ellipse(0, 0, eyeSize * 1.1, eyeSize * 1.1)
+        graphics.pop();
+      }
+    } else if (this.eyesType == "Shiny") {
+      let eyeSize = map(this.eyeSizeRandom, 0, 1, eyeBase * 1.15, eyeBase * 1.3)
+      eyeMove = eyeBase * 0.1
+
+      for (let i = 0; i < 2; i++) {
+        graphics.push();
+        graphics.translate(this.eyesP[i].x, this.eyesP[i].y)
+        // graphics.translate(this.eyesP[0].x - eyeBase / 2, this.eyesP[0].y - eyeBase / 3)
+        graphics.rotate(bodyAngle)
+        graphics.scale(1, blinkScale)
+        graphics.push();
+        graphics.clip(() => {
+          graphics.ellipse(0, 0, eyeBase * 1.5, eyeBase * 1.5)
+        });
+        graphics.fill(255)
+        graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
+        graphics.fill("#282828")
+        graphics.noStroke()
+        // graphics.rotate(-(bodyAngle))
+        // graphics.rotate(this.eyeAngleLerp)
+        graphics.translate(eyeMove * cos(this.eyeAngleLerp), eyeMove * sin(this.eyeAngleLerp))
+        graphics.ellipse(0, 0, eyeSize, eyeSize)
+
+        //shiny
+        graphics.fill(255)
+        graphics.ellipse(eyeSize * 0.15 * cos(PI * 5 / 4), eyeSize * 0.15 * sin(PI * 5 / 4), eyeSize * 0.45, eyeSize * 0.45)
+        graphics.ellipse(eyeSize * 0.25 * cos(PI / 8), eyeSize * 0.25 * sin(PI / 8), eyeSize * 0.15, eyeSize * 0.15)
+        graphics.ellipse(eyeSize * 0.25 * cos(PI * 3 / 8), eyeSize * 0.25 * sin(PI * 3 / 8), eyeSize * 0.15, eyeSize * 0.15)
+
+        graphics.pop();
+        //outline
+        graphics.noFill()
+        graphics.ellipse(0, 0, eyeBase * 1.5, eyeBase * 1.5)
+        graphics.pop();
+      }
     }
 
 
@@ -333,7 +504,9 @@ function setup() {
     segment: 28,
     faceColor1: faceColor1,
     faceColor2: faceColor2,
-    eyesDist: size / 4
+    eyesDist: random(size / 4.3, size / 3),
+    eyeSizeRandom: random(1),
+    eyeSizeRandom2: random(1)
   })
   obj.init()
 
@@ -552,7 +725,7 @@ function draw() {
   //draw hat
   // originalGraphics.push();
   // originalGraphics.translate(bodyStart.x, bodyStart.y);
-  // originalGraphics.rotate(bodyAngle + PI / 2);
+  // originalGraphics.rotate(bodyAngle);
   // originalGraphics.stroke("#282828");
   // originalGraphics.strokeWeight(4);
 
