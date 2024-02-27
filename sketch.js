@@ -18,12 +18,17 @@ let bodySpringStrength = 0.003; //0.0002, 0.00005
 let colors = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
 let faceColor1, faceColor2, colliderColor1, colliderColor2, colliderColor3
 let eyesType = ['Ellipse', 'Circle', 'Squint', 'Half', 'HalfStare', 'Bright', 'Shiny']
+let mouthType = ['Thick', 'Calm', 'Compressed', 'Cute', 'Smile', 'Unhappy', 'Monster']
+let headwear = ['PropellerHat']
 
 let theShader;
 let webGLCanvas
 let originalGraphics
 
 let obj
+
+let mousePressedPos
+let moveP
 
 var w = window.innerWidth,
   h = window.innerHeight;
@@ -55,10 +60,12 @@ class SoftBody {
       faceColor1: "#000",
       faceColor2: "#000",
       eyesDist: 10,
-      eyesType: "Shiny",
+      eyesType: "Half",
+      mouthType: "Monster",
       eyeAngleLerp: 0,
       eyeSizeRandom: 1,
-      eyeSizeRandom2: 1
+      eyeSizeRandom2: 1,
+      mouthSizeRandom: 1
     }
     Object.assign(def, args)
     Object.assign(this, def)
@@ -67,7 +74,7 @@ class SoftBody {
     //setup body points
     this.bodyP.push(new Particle(this.startPos.x, this.startPos.y));
     for (let t = 0; t < (TAU); t += TAU / this.segment) {
-      let fluctuation = noise(t * 120, t * 50) * 10;
+      let fluctuation = noise(t * 120, t * 50) * 5;
 
       let xx = this.startPos.x + (this.radius + fluctuation) * cos(t),
         yy = this.startPos.y + (this.radius + fluctuation) * sin(t),
@@ -184,14 +191,20 @@ class SoftBody {
   }
   display(graphics) {
     let bodyStart = createVector(this.bodyP[1].x, this.bodyP[1].y);
+    let bodyCenter = createVector(this.bodyP[0].x, this.bodyP[0].y);
     let bodyEnd = createVector(
       this.bodyP[int(this.bodyP.length / 2) + 1].x,
       this.bodyP[int(this.bodyP.length / 2) + 1].y
     );
+    let bodyTop = createVector(
+      this.bodyP[int(this.bodyP.length / 4) + 1].x,
+      this.bodyP[int(this.bodyP.length / 4) + 1].y
+    );
+
     bodyAngle = atan2(bodyStart.y - bodyEnd.y, bodyStart.x - bodyEnd.x);
 
     graphics.fill(255, 0, 0)
-    graphics.ellipse(bodyStart.x, bodyStart.y, 15)
+    graphics.ellipse(bodyTop.x, bodyTop.y, 15)
     graphics.fill(0, 255, 0)
     graphics.ellipse(bodyEnd.x, bodyEnd.y, 10)
 
@@ -219,7 +232,7 @@ class SoftBody {
 
     //---draw eyes
     let eyeBase = this.radius / 4
-    let eyeMid = createVector((this.eyesP[0].x + this.eyesP[1].x) / 2, this.eyesP[0].y)
+    let eyeMid = createVector((this.eyesP[0].x + this.eyesP[1].x) / 2, (this.eyesP[0].y + this.eyesP[1].y) / 2)
     let eyeAngle = 0;
     let eyeMove = map(dist(mouseX, mouseY, width / 2, height / 2),
       0, width / 2, 0, this.eyesDist * 0.285)
@@ -448,37 +461,125 @@ class SoftBody {
       }
     }
 
+    //---draw mouth
+    graphics.push()
+    graphics.translate(eyeMid.x, eyeMid.y)
+    graphics.rotate(bodyAngle)
+    graphics.translate(0, this.radius / 4)
+    if (this.mouthType == "Thick") {
+      graphics.push()
+      graphics.rotate(sin(bodyTop.y / 30 + PI / 2) / 5)
+      let size = this.radius * 0.045
+      let hh = map(sin(bodyTop.y / 50 + bodyTop.x / 50), -1, 1, size * 1.5, size * 3.5)
 
+      graphics.translate(0, this.radius / 20)
+      graphics.strokeCap(ROUND);
+      graphics.strokeWeight(size * 1.6)
+      graphics.stroke("#9F5F42")
+      graphics.noFill()
+      graphics.arc(0, -size / 2, size * 10, hh, PI / 16 + PI, PI * 15 / 16 + PI)
+      graphics.arc(0, size / 2, size * 10, hh, PI / 16 + PI, PI * 15 / 16 + PI)
+      graphics.strokeWeight(size * 0.2)
+      graphics.stroke(20)
+      graphics.arc(0, 0, size * 10, hh, PI / 16 + PI, PI * 15 / 16 + PI)
+      graphics.pop()
+    } else if (this.mouthType == "Calm") {
+      let size = this.radius * map(this.mouthSizeRandom, 0, 1, 0.045, 0.17)
+      graphics.rotate(sin(bodyTop.y / 30 + PI / 2) / 5)
+      graphics.line(-size, 0, size, 0)
+    } else if (this.mouthType == "Compressed") {
+      let size = this.radius * 0.15
+
+      graphics.noFill()
+      graphics.translate(0, (this.eyeType == 'Ellipse') ? 0 : -size * 0.75)  //move up
+
+      let mouthWidth = size * 0.5 * sin(bodyTop.y / 50) + size * 1.5
+      graphics.arc(0, size, mouthWidth, size * 0.6, PI, PI * 2)
+      graphics.line(-mouthWidth / 2, size, -mouthWidth / 2, size - size / 3)
+      graphics.line(mouthWidth / 2, size, mouthWidth / 2, size - size / 3)
+    } else if (this.mouthType == "Cute") {
+      let size = this.radius * 0.1
+      let w = map(sin(bodyTop.y / 50), 0, 1, 0.5, 1)
+      graphics.translate(0, -size * 2)
+      graphics.noFill()
+      graphics.arc(-size * 1.5 * w, size * 1.5, size * 3 * w, size * 1.5, 0, PI * 3 / 4)
+      graphics.arc(size * 1.5 * w, size * 1.5, size * 3 * w, size * 1.5, PI / 4, PI)
+
+    } else if (this.mouthType == "Smile") {
+      let size = this.radius * 0.05
+      graphics.rotate(sin(bodyTop.y / 20) / 6)
+      graphics.translate(0, size)
+      graphics.line(-size * 2, -size, 0, 0)
+      graphics.line(0, 0, size * 2, -size)
+    } else if (this.mouthType == "Unhappy") {
+      let size = this.radius * 0.05
+      graphics.rotate(sin(bodyTop.y / 20) / 6)
+      graphics.translate(0, size)
+      graphics.line(-size * 2, 0, 0, -size)
+      graphics.line(0, -size, size * 2, 0)
+    } else if (this.mouthType == "Monster") {
+      let size = this.radius * 0.05
+      let w = map(sin(bodyTop.y / 50), 0, 1, 0.5, 1)
+      let teethH = map(sin(bodyTop.y / 50), 0, 1, size * 0.7, size * 1.1)
+
+      graphics.rotate(sin(bodyTop.y / 40) / 3)
+      graphics.line(-size * 3, -size * 0.25, size * 3, -size * 0.25)
+      graphics.fill(255)
+
+      graphics.push()
+      graphics.strokeWeight(this.radius / 80)
+      graphics.translate(-size * 1.5, 0)
+      graphics.triangle(-size / 2, 0, size / 2, 0, 0, teethH)
+      graphics.pop()
+
+      graphics.push()
+      graphics.strokeWeight(this.radius / 80)
+      graphics.translate(size * 1.5, 0)
+      graphics.triangle(-size / 2, 0, size / 2, 0, 0, teethH)
+      graphics.pop()
+    }
+
+
+
+    graphics.pop()
 
     for (let spring of this.springs) {
       // spring.show(graphics);
     }
 
   }
-  mouse() {
+  mouse(moveP) {
     if (mouseIsPressed) {
-      // let dTop = dist(this.particles[0].x, this.particles[0].y, mouseX, mouseY)
-      // let dBottom = dist(this.particles[int(this.particles.length / 2)].x, this.particles[int(this.particles.length / 2)].y, mouseX, mouseY)
-      // let moveP = this.particles[0]
-      // if (dTop > dBottom) {
-      //   moveP = this.particles[0]
-      // } else if (dTop < dBottom) {
-      //   moveP = this.particles[int(this.particles.length / 2)]
-      // }
-      // particles[0].lock();
-      this.particles[0].x = mouseX;
-      this.particles[0].y = mouseY;
-      this.particles[0].unlock();
+      let movePos = this.particles[0]
+      if (moveP == "Top") {
+        movePos = this.particles[int(this.bodyP.length / 4) + 1]
+      } else if (moveP == "Center") {
+        movePos = this.particles[0]
+      }
+      movePos.x = mouseX;
+      movePos.y = mouseY;
+      movePos.unlock();
       //     particles2[0].x = mouseX;
       // particles2[0].y = mouseY;
       // particles2[0].unlock();
     }
   }
 }
+function mousePressed() {
+  mousePressedPos = createVector(mouseX, mouseY)
+
+  let topPointDist = dist(mouseX, mouseY, obj.bodyP[int(obj.bodyP.length / 4) + 1].x,
+    obj.bodyP[int(obj.bodyP.length / 4) + 1].y)
+  if (topPointDist < obj.radius / 4) {
+    moveP = "Top"
+  } else {
+    moveP = "Center"
+  }
+}
 
 function setup() {
   createCanvas(windowHeight, windowHeight);
-
+  // randomSeed(569999999999999)
   physics = new VerletPhysics2D();
 
   let bounds = new Rect(0, 0, width, (height * 2) / 3);
@@ -506,7 +607,10 @@ function setup() {
     faceColor2: faceColor2,
     eyesDist: random(size / 4.3, size / 3),
     eyeSizeRandom: random(1),
-    eyeSizeRandom2: random(1)
+    eyeSizeRandom2: random(1),
+    mouthSizeRandom: random(1),
+    eyesType: random(eyesType),
+    mouthType: random(mouthType),
   })
   obj.init()
 
@@ -710,7 +814,7 @@ function draw() {
 
 
   obj.display(originalGraphics)
-  obj.mouse()
+  obj.mouse(moveP)
 
 
   // let bodyStart = createVector(particles[1].x, particles[1].y);
