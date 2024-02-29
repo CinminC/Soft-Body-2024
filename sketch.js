@@ -16,10 +16,34 @@ let bodyAngle;
 let bodySpringStrength = 0.002; //0.0002, 0.00005
 
 let colors = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
+let colors1 = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
+var colors2 = "0081af-ff2244-00abe7-eaba6b-2dc7ff-ead2ac".split("-").map(a => "#" + a)
+var colors3 = "c1a5a9-1d1a31-f08cae-4d2d52-9a4c95".split("-").map(a => "#" + a)
+var colors4 = "083d77-fa664a-ebebd3-f95738-f4d35e-ee964b".split("-").map(a => "#" + a)
+//new colors
+// var colors5 = "#6C8C8C-#8C6D46-#D9AE79-#F2E8DF-#4a7a8c".split("-")
+var colors5 = "388c8c-8c591b-d9933f-f2dac4-2a728c".split("-").map(a => "#" + a)
+// var colors6 = "#9FBFAD-#517354-#CFD982-#F2EBDC-#594432".split("-")
+var colors6 = "a3d6b9-3b693e-ccd968-f2e6cb-594432".split("-").map(a => "#" + a)
+var colors7 = "#154659-#32A69A-#BAD9C8-#F26A1B-#A63B32".split("-")
+// var colors8 = "#245473-#142F40-#8C6645-#D9B6A3-#A6877C".split("-")
+var colors8 = "26597a-0D4466-946032-ebbea7-bf835e".split("-").map(a => "#" + a)
+// var colors9 = "#268C8C-#9EA663-#F2D8A7-#8C2F0D-#F2785C".split("-")
+var colors9 = "2da8a8-9aa63d-f2d296-a1350e-f2785c".split("-").map(a => "#" + a)
+var colors10 = "#3A5939-#F2ECD8-#D9A13B-#BF3F34-#732D2D".split("-")
+var colors11 = "ff4e00-8ea604-f5bb00-ec9f05-bf3100".split("-").map(a => "#" + a)
+var colors12 = "ffbe0b-fb5607-ff006e-8338ec-3a86ff-eee".split("-").map(a => "#" + a)
+var colors13 = "181717-B4B7BF-D0D3D9-59554D-262626".split("-").map(a => "#" + a)
+var allColorsArr = [colors1]
+// var allColorsArr = [colors1, colors2, colors3, colors4, colors5, colors6, colors7, colors8, colors9, colors10, colors11, colors12, colors13]
+
+
 let faceColor1, faceColor2, colliderColor1, colliderColor2, colliderColor3
-let eyesType = ['Ellipse', 'Circle', 'Squint', 'Half', 'HalfStare', 'Bright', 'Shiny']
-let mouthType = ['Thick', 'Calm', 'Compressed', 'Cute', 'Smile', 'Unhappy', 'Monster']
-let headwear = ['PropellerHat', 'Fruit', 'Stack', 'Beret', 'Curly', 'Tomato', 'BowTie', 'Leaf', 'OneCurly', 'Puffy']
+let eyesType = ['Ellipse', 'Circle', 'Squint', 'Half', 'HalfStare', 'Bright', 'Shiny'] //7
+let mouthType = ['Thick', 'Calm', 'Compressed', 'Cute', 'Smile', 'Unhappy', 'Monster']  //7
+let headwear = ['PropellerHat', 'Fruit', 'Stack', 'Beret', 'Curly', 'Tomato', 'BowTie', 'Leaf', 'OneCurly', 'Puffy', 'Bangs', 'Cat'] //11
+let accessories = ['TShirt', 'Shirt', 'Belt', 'SlingBag', 'LittleBag', 'Ring', 'Ear']  //6
+let bodySize = ['Small', 'Medium', 'Large']
 
 let theShader;
 let webGLCanvas
@@ -72,8 +96,6 @@ function windowResized() {
   fitCanvasSize()
 }
 
-
-
 function preload() {
   theShader = new p5.Shader(this.renderer, vert, frag)
 }
@@ -81,8 +103,20 @@ function preload() {
 class SoftBody {
   constructor(args) {
     let def = {
+
+      shuffledColors: colors1,
+      removeBodyColors: colors1,
+      bodyColor: "#fff",
+      bodyColor2: "#fff",
+      hairColor: "#fff",
+      decoColor: "#fff",
+      decoColor2: "#fff",
+
       startPos: createVector(width / 2, 0),
       radius: 100,
+      actualW: 100,
+      actualH: 100,
+
       segment: 40,
       particles: [],
       bodyP: [],
@@ -94,24 +128,44 @@ class SoftBody {
       eyesDist: 10,
       eyesType: "Half",
       mouthType: "Monster",
-      headwear: "Puffy",
+      headwear: "Beret",
+      accessories: 'Ring',
+      bodySize: 'Medium',
+      bodySizeRandom: 1,
       eyeAngleLerp: 0,
       eyeSizeRandom: 1,
       eyeSizeRandom2: 1,
       mouthSizeRandom: 1,
-      hairSizeRandom: 1
+      hairSizeRandom: 1,
+      isDouble: 0
     }
     Object.assign(def, args)
     Object.assign(this, def)
   }
   init() {
+    this.actualW = this.radius
+    this.actualH = this.radius
+    if (this.bodySize == "Small") {
+      let sMultiply = map(this.bodySizeRandom, 0, 1, 0.85, 0.9)
+      this.actualW = this.radius * sMultiply
+      this.actualH = this.radius * sMultiply
+    } else if (this.bodySize == "Medium") {
+      let sMultiply = map(this.bodySizeRandom, 0, 1, 1, 1.05)
+      this.actualW = this.radius * sMultiply
+      this.actualH = this.radius * sMultiply
+    } else if (this.bodySize == "Large") {
+      let sMultiply = map(this.bodySizeRandom, 0, 1, 1.3, 1.35)
+      this.actualW = this.radius * sMultiply
+      this.actualH = this.radius * sMultiply
+    }
+
     //setup body points
     this.bodyP.push(new Particle(this.startPos.x, this.startPos.y));
     for (let t = 0; t < (TAU); t += TAU / this.segment) {
       let fluctuation = noise(t * 120, t * 50) * 8;
 
-      let xx = this.startPos.x + (this.radius + fluctuation) * cos(t),
-        yy = this.startPos.y + (this.radius + fluctuation) * sin(t),
+      let xx = this.startPos.x + (this.actualW + fluctuation) * cos(t),
+        yy = this.startPos.y + (this.actualH + fluctuation) * sin(t),
         p = new Particle(xx, yy);
       this.bodyP.push(p);
       // originalGraphics.fill(map(t, 0, TAU, 0, 255))
@@ -172,8 +226,8 @@ class SoftBody {
 
 
     //setup eyes points
-    this.eyesP.push(new Particle(this.startPos.x - this.eyesDist, this.startPos.y - this.radius / 3));
-    this.eyesP.push(new Particle(this.startPos.x + this.eyesDist, this.startPos.y - this.radius / 3));
+    this.eyesP.push(new Particle(this.startPos.x - this.eyesDist, this.startPos.y - this.actualH / 3));
+    this.eyesP.push(new Particle(this.startPos.x + this.eyesDist, this.startPos.y - this.actualH / 3));
 
     //set up eyes springs
     this.springs.push(new Spring(this.eyesP[0], this.eyesP[1], bodySpringStrength));
@@ -230,9 +284,9 @@ class SoftBody {
     // }
   }
   display(graphics) {
-    let bodyStart = createVector(this.bodyP[1].x, this.bodyP[1].y);
+    let bodyRight = createVector(this.bodyP[1].x, this.bodyP[1].y);
     let bodyCenter = createVector(this.bodyP[0].x, this.bodyP[0].y);
-    let bodyEnd = createVector(
+    let bodyLeft = createVector(
       this.bodyP[int(this.bodyP.length / 2) + 1].x,
       this.bodyP[int(this.bodyP.length / 2) + 1].y
     );
@@ -240,23 +294,201 @@ class SoftBody {
       this.bodyP[int(this.bodyP.length * 3 / 4) + 1].x,
       this.bodyP[int(this.bodyP.length * 3 / 4) + 1].y
     );
+    let bodyLowerRight = createVector(
+      this.bodyP[int(this.bodyP.length / 8) + 1].x,
+      this.bodyP[int(this.bodyP.length / 8) + 1].y
+    );
+    let eyeMid = createVector((this.eyesP[0].x + this.eyesP[1].x) / 2, (this.eyesP[0].y + this.eyesP[1].y) / 2)
+    let lfAverage = createVector((bodyLeft.x + bodyRight.x) / 2, (bodyLeft.y + bodyRight.y) / 2)
+
     let bodyTopN = int(this.bodyP.length * 3 / 4) + 1
 
-    bodyAngle = atan2(bodyStart.y - bodyEnd.y, bodyStart.x - bodyEnd.x);
+    bodyAngle = atan2(bodyRight.y - bodyLeft.y, bodyRight.x - bodyLeft.x);
 
-    graphics.fill(255, 0, 0)
-    graphics.ellipse(bodyStart.x, bodyStart.y, 40)
-    graphics.fill(0, 255, 0)
-    graphics.ellipse(bodyTop.x, bodyTop.y, 40)
-    graphics.fill(0, 0, 255)
-    graphics.ellipse(bodyEnd.x, bodyEnd.y, 40)
+    //important pos
+    // graphics.fill(255, 0, 0)
+    // graphics.ellipse(bodyRight.x, bodyRight.y, 40)
+    // graphics.fill(0, 255, 0)
+    // graphics.ellipse(bodyTop.x, bodyTop.y, 40)
+    // graphics.fill(0, 0, 255)
+    // graphics.ellipse(bodyLeft.x, bodyLeft.y, 40)
+
 
     graphics.stroke("#282828");
     graphics.strokeWeight(this.radius / 30);
+    graphics.strokeJoin(ROUND);
+    if (this.accessories == "Ear") {
+      let clr1 = lerpColor(color(this.bodyColor), color(0), 0.1)
+      let clr2 = lerpColor(color(this.bodyColor), color(0), 0.4)
+      graphics.fill(clr1)
+      graphics.ellipse(bodyRight.x, bodyRight.y, this.actualW * 0.4)
+      graphics.ellipse(bodyLeft.x, bodyLeft.y, this.actualW * 0.4)
+      graphics.fill(clr2)
+      graphics.ellipse(bodyRight.x, bodyRight.y, this.actualW * 0.2)
+      graphics.ellipse(bodyLeft.x, bodyLeft.y, this.actualW * 0.2)
+
+    }
 
     //---draw body
+    //with clipping
     graphics.push();
-    graphics.fill(this.faceColor1);
+    graphics.clip(() => {
+      graphics.beginShape();
+      for (var i = 1; i < this.bodyP.length; i++) {
+        if (i == bodyTopN) {
+          graphics.curveVertex(
+            (this.bodyP[bodyTopN - 1].x + this.bodyP[bodyTopN + 1].x) / 2,
+            lerp((this.bodyP[bodyTopN - 1].y + this.bodyP[bodyTopN + 1].y) / 2, this.bodyP[i].y, 0.5));
+        } else {
+          graphics.curveVertex(this.bodyP[i].x, this.bodyP[i].y);
+        }
+      }
+      for (let i = 1; i < 4; i++) {
+        graphics.curveVertex(this.bodyP[i].x, this.bodyP[i].y)
+      }
+      graphics.endShape();
+    });
+    let clr = color(this.bodyColor2)
+    clr.setAlpha(150)
+    graphics.fill(this.bodyColor);
+    graphics.ellipse(lfAverage.x, lfAverage.y, max(this.actualW, this.actualH) * 2)
+
+    //inner circle
+    if (this.isDouble) {
+      graphics.push()
+      graphics.translate(lfAverage.x, lfAverage.y)
+      graphics.rotate(bodyAngle)
+      graphics.fill(this.bodyColor2)
+      graphics.beginShape();
+      for (let t = 0; t < (TAU); t += TAU / this.segment) {
+        let fluctuation = noise(t * 150, t * 110) * 4;
+
+        let xx = (this.actualW * 0.55 + fluctuation) * cos(t),
+          yy = (this.actualH * 0.55 + fluctuation) * sin(t);
+        graphics.curveVertex(xx, yy);
+
+      }
+      for (let t = 0; t < (TAU) / 5; t += TAU / this.segment) {
+        let fluctuation = noise(t * 150, t * 110) * 4;
+
+        let xx = (this.actualW * 0.55 + fluctuation) * cos(t),
+          yy = (this.actualH * 0.55 + fluctuation) * sin(t)
+        graphics.curveVertex(xx, yy)
+      }
+      graphics.endShape();
+      graphics.pop()
+    }
+
+
+    if (this.accessories == "TShirt") {
+      let shirtClr = lerpColor(color(this.decoColor), color("#ffffff"), 0.5)  //if double
+      graphics.translate(lfAverage.x, lfAverage.y)
+      graphics.rotate(bodyAngle)
+      graphics.fill(shirtClr)
+      graphics.rect(-this.actualW, this.actualH / 5, this.actualW * 2, this.actualH * 2)
+
+      graphics.noStroke()
+      graphics.fill((this.isDouble) ? color(this.bodyColor2) : color(this.bodyColor)) //if double
+      graphics.ellipse(0, this.actualH / 5, this.radius / 3, this.radius / 6)
+
+      graphics.stroke("#282828")
+      graphics.noFill()
+      graphics.strokeWeight(this.radius / 50)
+      graphics.arc(0, this.actualH / 5, this.radius / 2, this.radius / 3, 0, PI, OPEN)
+      graphics.strokeWeight(this.radius / 30)
+      graphics.arc(0, this.actualH / 5, this.radius / 3, this.radius / 6, 0, PI, OPEN)
+    } if (this.accessories == "Shirt") {
+      let s = this.radius / 15
+      let shirtClr = lerpColor(color(this.decoColor), color("#ffffff"), 0.8)  //if double
+
+      graphics.translate(lfAverage.x, lfAverage.y)
+      graphics.rotate(bodyAngle)
+
+      graphics.fill(shirtClr)
+      graphics.rect(-this.actualW, this.actualH / 5, this.actualW * 2, this.actualH * 2)
+      graphics.translate(0, this.actualH / 5)
+      graphics.strokeWeight(this.radius / 50)
+      graphics.line(0, 0, 0, this.actualH * 2)
+      graphics.rotate(-PI / 2)
+      graphics.strokeWeight(this.radius / 30)
+      graphics.quad(0, 0, s, -s * 4, 0, -s * 4, -s * 1.5, -s)
+      graphics.quad(0, 0, s, s * 4, 0, s * 4, -s * 1.5, s)
+    } if (this.accessories == "Belt") {
+      let s = dist(bodyLeft.x, bodyLeft.y, bodyRight.x, bodyRight.y)
+      let beltClr = lerpColor((this.isDouble) ? color(this.bodyColor2) : color(this.bodyColor), color("#AF724E"), 0.8)  //if double
+      graphics.translate(lfAverage.x, lfAverage.y)
+      graphics.rotate(bodyAngle)
+
+      graphics.fill(beltClr)
+      graphics.rectMode(CENTER)
+      graphics.rect(0, this.actualH / 4, this.actualW * 2, this.actualH * 0.1)
+      graphics.fill(this.decoColor)
+      graphics.rect(0, this.actualH / 4, this.actualW * 0.3, this.actualH * 0.2)
+      graphics.fill(beltClr)
+      graphics.rect(0, this.actualH / 4, this.actualW * 0.15, this.actualH * 0.1)
+    } if (this.accessories == "SlingBag") {
+      let s = dist(bodyLeft.x, bodyLeft.y, bodyRight.x, bodyRight.y)
+      let r = atan2(bodyLowerRight.x - bodyLeft.x, bodyLowerRight.y, bodyLeft.y)
+      let bagClr = lerpColor(color(this.decoColor), (this.isDouble) ? color(this.bodyColor2) : color(this.bodyColor), 0.5)  //if double
+
+      graphics.translate(lfAverage.x, lfAverage.y)
+
+      graphics.rotate(bodyAngle + PI / 8)
+      graphics.translate(0, this.actualH / 4)
+
+      graphics.fill(bagClr)
+      graphics.rectMode(CENTER)
+      // graphics.rotate(r)
+      graphics.rect(0, 0, this.actualW * 2, this.actualH * 0.07)
+
+      // graphics.line(bodyLeft.x, bodyLeft.y, bodyLowerRight.x, bodyLowerRight.y)
+      graphics.arc(0, 0, this.actualW / 2, this.actualH / 2.5, 0, PI)
+      graphics.fill(this.decoColor)
+      graphics.arc(0, 0, this.actualW / 2, this.actualH / 4, 0, PI)
+      graphics.arc(0, 0, this.actualW / 2, this.actualH / 6, PI, 0)
+    } if (this.accessories == "LittleBag") {
+      let s = dist(bodyLeft.x, bodyLeft.y, bodyRight.x, bodyRight.y)
+      let r = atan2(bodyLowerRight.x - bodyLeft.x, bodyLowerRight.y, bodyLeft.y)
+      let bagClr = lerpColor(color(this.decoColor), (this.isDouble) ? color(this.bodyColor2) : color(this.bodyColor), 0.5)  //if double
+
+      graphics.translate(lfAverage.x, lfAverage.y)
+      graphics.rotate(bodyAngle + PI / 8)
+      graphics.rectMode(CENTER)
+      graphics.noFill()
+      graphics.strokeWeight(this.actualH * 0.03 + this.radius / 15)
+      graphics.arc(0, 0, this.actualW * 2, this.actualH * 0.8, 0, PI)
+      graphics.stroke(bagClr)
+      graphics.strokeWeight(this.actualH * 0.03)
+      graphics.arc(0, 0, this.actualW * 2, this.actualH * 0.8, 0, PI)
+    } if (this.accessories == "Ring") {
+      // let s = dist(bodyLeft.x, bodyLeft.y, bodyRight.x, bodyRight.y)
+      // let beltClr = lerpColor(color(this.bodyColor), color("#AF724E"), 0.8)  //if double
+      graphics.translate(lfAverage.x, lfAverage.y)
+      graphics.rotate(bodyAngle)
+
+      graphics.noFill()
+      graphics.strokeWeight(this.actualH * 0.01 + this.radius / 15)
+      graphics.arc(0, this.actualH / 2.5, this.actualW * 0.45, this.actualH * 0.16, PI / 8, PI * 7 / 8)
+      graphics.stroke(this.decoColor)
+      graphics.strokeWeight(this.actualH * 0.01)
+      graphics.arc(0, this.actualH / 2.5, this.actualW * 0.45, this.actualH * 0.16, PI / 8, PI * 7 / 8)
+
+      graphics.stroke("#282828")
+      graphics.strokeWeight(this.radius / 30)
+      graphics.fill("#F7D826")
+      graphics.ellipse(0, this.actualH / 1.9, this.actualW * 0.18, this.actualH * 0.18)
+      graphics.strokeWeight(this.radius / 50)
+      graphics.line(-this.actualW * 0.09, this.actualH / 1.9, this.actualW * 0.09, this.actualH / 1.9)
+      graphics.point(0, this.actualH / 1.75)
+      // graphics.fill(beltClr)
+      // graphics.rect(0, this.actualH / 4, this.actualW * 0.15, this.actualH * 0.1)
+    }
+
+    graphics.pop();
+
+    //outline
+    graphics.push();
+    graphics.noFill();
 
     graphics.beginShape();
     for (var i = 1; i < this.bodyP.length; i++) {
@@ -290,9 +522,24 @@ class SoftBody {
     graphics.endShape();
     graphics.pop();
 
+    if (this.accessories == "LittleBag") {
+      let bagClr = lerpColor(color(this.decoColor), (this.isDouble) ? color(this.bodyColor2) : color(this.bodyColor), 0.3)  //if double
+
+      graphics.push();
+      graphics.translate(bodyLowerRight.x, bodyLowerRight.y + this.actualW / 12)
+      graphics.fill(this.decoColor)
+      graphics.rectMode(CENTER)
+      graphics.rect(0, 0, this.actualW / 5, this.actualW / 4, 0, 0, this.actualW / 20, this.actualW / 20)
+      graphics.fill(bagClr)
+      graphics.strokeWeight(this.radius / 50)
+      graphics.triangle(0, 0, this.actualW / 10, -this.actualW / 8, -this.actualW / 10, -this.actualW / 8)
+      graphics.ellipse(0, 0, this.actualW / 20)
+      graphics.pop();
+    }
+
+
     //---draw eyes
     let eyeBase = this.radius / 4
-    let eyeMid = createVector((this.eyesP[0].x + this.eyesP[1].x) / 2, (this.eyesP[0].y + this.eyesP[1].y) / 2)
     let eyeAngle = 0;
     let eyeMove = map(dist(mouseX, mouseY, width / 2, height / 2),
       0, width / 2, 0, this.eyesDist * 0.285)
@@ -655,9 +902,10 @@ class SoftBody {
       graphics.strokeWeight(this.radius / 30)
 
       graphics.push()
-      graphics.translate(eyeMid.x, eyeMid.y)
+      graphics.translate(lfAverage.x, lfAverage.y)
       graphics.rotate(bodyAngle)
-      graphics.translate(0, - this.radius * 2 / 3 + s * 5.5)
+      let yTemp = map(this.actualH, this.radius * 0.85, this.radius * 1.35, s * 6.5, s * 8.8)
+      graphics.translate(0, -this.actualH + yTemp)
       graphics.noFill()
       graphics.arc(0, 0, s * 6, s * 2, 0, PI)
       graphics.pop()
@@ -680,7 +928,8 @@ class SoftBody {
       graphics.translate(bodyTop.x, bodyTop.y)
       graphics.rotate(bodyAngle + r)
       graphics.translate(0, this.radius / 15);
-      graphics.fill("#bd9557")
+      // graphics.fill("#bd9557")
+      graphics.fill(this.hairColor)
       graphics.ellipse(0, 0, s * 3, s * 1.1)
       graphics.ellipse(0, -this.radius / 9, s * 2.2, s * 2.4 / 3)
       graphics.ellipse(0, -this.radius / 9 * 2, s * 1.5, s * 2 / 3)
@@ -694,9 +943,10 @@ class SoftBody {
       graphics.rotate(bodyAngle + r)
       graphics.translate(0, - dist(eyeMid.x, eyeMid.y, bodyTop.x, bodyTop.y))
 
-      graphics.fill(faceColor2)  //headwear clr
-      graphics.ellipse(0, 0, s * 3, s * 1.3)
-      graphics.rect(0, -s, s * 0.2, s * 0.7, s * 0.1)
+      graphics.fill(this.hairColor)  //headwear clr
+      graphics.ellipse(0, 0, s * 3, s * 1.1)
+      graphics.arc(0, 0, s * 3, s * 1.8, PI, 0)
+      graphics.rect(0, -s * 1.2, s * 0.2, s * 0.7, s * 0.1)
       graphics.pop()
     } else if (this.headwear == "Curly") {
       let r = this.radius / 5
@@ -706,7 +956,7 @@ class SoftBody {
       graphics.translate(bodyTop.x, bodyTop.y)
       graphics.rotate(bodyAngle)
       graphics.strokeWeight(this.radius / 30)
-      graphics.fill(60)
+      graphics.fill(this.hairColor)
 
       graphics.push()
       graphics.rotate(angle)
@@ -812,7 +1062,7 @@ class SoftBody {
       graphics.translate(bodyTop.x, bodyTop.y)
       graphics.rotate(bodyAngle)
       graphics.strokeWeight(this.radius / 30)
-      graphics.fill(faceColor2)  //headwear clr
+      graphics.fill(this.hairColor)  //headwear clr
       graphics.strokeJoin(ROUND);
 
       graphics.push()
@@ -837,7 +1087,7 @@ class SoftBody {
       graphics.translate(bodyTop.x, bodyTop.y)
       graphics.rotate(bodyAngle)
       graphics.strokeWeight(this.radius / 30)
-      graphics.fill(faceColor2)  //headwear clr
+      graphics.fill(this.hairColor)  //headwear clr
       graphics.strokeJoin(ROUND);
 
       // graphics.arc(0, 0, r, r * 4, PI / 2, -PI / 2)
@@ -873,7 +1123,7 @@ class SoftBody {
       graphics.translate(bodyTop.x, bodyTop.y)
       graphics.rotate(bodyAngle)
       graphics.strokeWeight(this.radius / 30)
-      graphics.fill(faceColor2)  //headwear clr
+      graphics.fill(this.hairColor)  //headwear clr
       graphics.strokeJoin(ROUND);
 
       // graphics.arc(0, 0, r, r * 4, PI / 2, -PI / 2)
@@ -909,12 +1159,11 @@ class SoftBody {
       graphics.translate(bodyTop.x, bodyTop.y)
       graphics.rotate(bodyAngle)
       graphics.strokeWeight(this.radius / 30)
-      graphics.fill(faceColor2)  //headwear clr
       graphics.strokeJoin(ROUND);
 
       graphics.push()
-      graphics.fill(random(colors
-      ))  //headwear clr2
+
+      graphics.fill(this.decoColor2)  //headwear clr2
       graphics.translate(0, -this.radius / 10)
       graphics.triangle(-r * 2, 0, r * 2, 0, 0, -r * 3 * 2)
       graphics.pop()
@@ -940,15 +1189,53 @@ class SoftBody {
         graphics.push()
         graphics.noStroke()
 
-        graphics.fill(faceColor2)  //headwear clr
+        graphics.fill(this.hairColor)  //headwear clr
         graphics.circle(i.x, i.y, i.rs)
 
         graphics.pop()
       }
 
       graphics.pop()
-    }
+    } else if (this.headwear == "Bangs") {
+      let s = this.actualW / 3
+      let r = map(sin(bodyTop.y / 50), 0, 1, 0, -PI / 20)
+      let y = lerp(eyeMid.y, bodyTop.y, 0.1)
+      graphics.push()
+      graphics.translate(bodyTop.x, bodyTop.y)
+      graphics.rotate(bodyAngle + r)
 
+      // graphics.translate(0, - dist(eyeMid.x, eyeMid.y, bodyTop.x, bodyTop.y))
+      graphics.fill(this.hairColor)  //headwear clr
+      graphics.rectMode(CENTER)
+      graphics.arc(s * 0.9, s * 0.4, s * 2.2, s * 1.8, -PI / 2, PI / 2, CHORD)
+      graphics.arc(-s * 0.9, s * 0.4, s * 2.2, s * 1.8, PI / 2, PI * 3 / 2, CHORD)
+      // graphics.arc(0, s * 0.4, s * 4, s * 2.5, PI, 0 / 2, CHORD)
+      graphics.arc(s, s * 0.4, s * 2, s * 2.5, PI, 0 / 2, CHORD)
+      graphics.arc(-s, s * 0.4, s * 2, s * 2.5, PI, 0 / 2, CHORD)
+
+      graphics.noStroke()
+      graphics.arc(s * 0.9 + this.radius / 60, s * 0.4, s * 2.2 - this.radius / 15, s * 1.8 - this.radius / 15, -PI / 2, PI / 2, CHORD)  //erase stroke note
+      graphics.arc(-s * 0.9 - this.radius / 60, s * 0.4, s * 2.2 - this.radius / 15, s * 1.8 - this.radius / 15, PI / 2, PI * 3 / 2, CHORD)
+      graphics.pop()
+    } else if (this.headwear == "Cat") {
+      let s = this.actualW / 3
+      let h = this.actualW / 3 * map(sin(bodyTop.y / 40 + bodyTop.y / 30), 0, 1, 0.8, 0.9)
+
+      let clr = lerpColor(color(this.hairColor), color(0), 0.2)
+
+      graphics.push()
+      graphics.translate(bodyTop.x, bodyTop.y + this.radius / 15)
+
+      graphics.rotate(bodyAngle)
+
+      graphics.fill(this.hairColor)  //headwear clr
+      graphics.triangle(0, 0, -s, 0, -s / 2, -h)
+      graphics.triangle(0, 0, s, 0, s / 2, -h)
+      graphics.fill(clr)  //headwear clr
+      graphics.triangle(-s * 0.25, 0, -s * 0.75, 0, -s * 0.5, -h * 0.5)
+      graphics.triangle(s * 0.25, 0, s * 0.75, 0, s * 0.5, -h * 0.5)
+      graphics.pop()
+    }
 
 
     for (let spring of this.springs) {
@@ -1011,25 +1298,81 @@ function setup() {
   colliderColor3 = random(colors)
 
   let size = width * 0.31
+  let shuffledColors = random(allColorsArr).slice().sort((a, b) => random() - 0.5);
+  let removeBodyColors = shuffledColors.slice(2);
   obj = new SoftBody({
+    shuffledColors: shuffledColors,
+    removeBodyColors: removeBodyColors,
+    bodyColor: shuffledColors[0],
+    bodyColor2: shuffledColors[1],
+    hairColor: shuffledColors[2],
+    decoColor: shuffledColors[3],
+    decoColor2: shuffledColors[4],
+    // decoColor2: removeBodyColors[int(random(0, removeBodyColors.length))],
+
     startPos: createVector(width / 2, height / 2 - 220),
     radius: size,
     segment: 28,
     faceColor1: faceColor1,
     faceColor2: faceColor2,
+    bodySizeRandom: random(1),
     eyesDist: random(size / 4.3, size / 3),
     eyeSizeRandom: random(1),
     eyeSizeRandom2: random(1),
     mouthSizeRandom: random(1),
     hairSizeRandom: random(1),
+    isDouble: random([0, 1]),
     eyesType: random(eyesType),
-    mouthType: random(mouthType)
-    // headwear: random(headwear)
+    mouthType: random(mouthType),
+    // headwear: random(headwear),
+    headwear: "Cat",
+    // accessories: "Ear",
+    accessories: random(accessories),
+    bodySize: random(bodySize)
   })
   obj.init()
 
+}
+
+
+function draw() {
+  webGLCanvas.shader(theShader)
+  theShader.setUniform('u_resolution', [width / 1000, height / 1000])
+  theShader.setUniform('u_time', millis() / 1000)
+  theShader.setUniform('u_mouse', [mouseX / width, mouseY / height])
+  theShader.setUniform('u_tex', originalGraphics)
+  webGLCanvas.clear()
+  webGLCanvas.rect(-width / 2, -height / 2, width, height)
+
+  physics.update();
+
+  originalGraphics.background("#EAE7D6");
+  originalGraphics.stroke(200)
+  originalGraphics.strokeWeight(0.5)
+  let span = 15
+  for (let i = 0; i < width; i += span) {
+    originalGraphics.line(i, 0, i, height)
+  }
+
+  originalGraphics.push();
+  originalGraphics.strokeWeight(obj.radius / 30);
+  originalGraphics.stroke("#282828");
+  originalGraphics.fill(colliderColor1);
+  originalGraphics.rect(width / 2 - 200, height * 3 / 4, 400, height);
+  originalGraphics.fill(colliderColor2);
+  originalGraphics.ellipse(width / 2, height * 3 / 4 + 15, width * 0.8, 100);
+  originalGraphics.fill(colliderColor3);
+  originalGraphics.ellipse(width / 2, height * 3 / 4, width * 0.8, 100);
+  originalGraphics.pop();
+
+  obj.display(originalGraphics)
+  obj.mouse(moveP)
+
+  image(webGLCanvas, 0, 0, width, height)
 
 }
+
+
 
 function new_ball(xx, yy) {
   // physics.clear();
@@ -1185,41 +1528,4 @@ function new_rec(x, y) {
   //springs.push(new Spring(p1, p5, 0, 0.9, true))
   //springs.push(new Spring(p3, p6, 0, 0.5, true))
   //springs.push(new Spring(p2, p4, 100, 1.0, true))
-}
-
-function draw() {
-  webGLCanvas.shader(theShader)
-  theShader.setUniform('u_resolution', [width / 1000, height / 1000])
-  theShader.setUniform('u_time', millis() / 1000)
-  theShader.setUniform('u_mouse', [mouseX / width, mouseY / height])
-  theShader.setUniform('u_tex', originalGraphics)
-  webGLCanvas.clear()
-  webGLCanvas.rect(-width / 2, -height / 2, width, height)
-
-  physics.update();
-
-  originalGraphics.background("#EAE7D6");
-  originalGraphics.stroke(200)
-  originalGraphics.strokeWeight(0.5)
-  let span = 5
-  for (let i = 0; i < width; i += span) {
-    originalGraphics.line(i, 0, i, height)
-  }
-
-  originalGraphics.push();
-  originalGraphics.strokeWeight(4);
-  originalGraphics.stroke("#282828");
-  originalGraphics.fill(colliderColor1);
-  originalGraphics.rect(width / 2 - 200, height * 2 / 3, 400, height);
-  originalGraphics.fill(colliderColor2);
-  originalGraphics.ellipse(width / 2, height * 2 / 3 + 10, width * 0.8, 100);
-  originalGraphics.fill(colliderColor3);
-  originalGraphics.ellipse(width / 2, height * 2 / 3, width * 0.8, 100);
-  originalGraphics.pop();
-
-  obj.display(originalGraphics)
-  obj.mouse(moveP)
-
-  image(webGLCanvas, 0, 0, width, height)
-
 }
