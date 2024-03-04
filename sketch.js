@@ -16,7 +16,8 @@ let bodyAngle;
 let bodySpringStrength = 0.002; //0.0002, 0.00005
 
 let colors = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
-let colors1 = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
+// let colors1 = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
+var colors1 = "7b91e9-17c3b2-f5b800-ecf238-fa5a62".split("-").map(a => "#" + a)
 var colors2 = "0081af-ff2244-00abe7-eaba6b-2dc7ff-ead2ac".split("-").map(a => "#" + a)
 var colors3 = "c1a5a9-1d1a31-f08cae-4d2d52-9a4c95".split("-").map(a => "#" + a)
 var colors4 = "083d77-fa664a-ebebd3-f95738-f4d35e-ee964b".split("-").map(a => "#" + a)
@@ -53,7 +54,13 @@ let obj
 
 let mousePressedPos
 let moveP
+let showSprings = false;
 
+function keyPressed() {
+  if (key == ' ') {
+    showSprings = !showSprings;
+  }
+}
 
 let GLOBAL = {
   "size": {
@@ -1224,7 +1231,7 @@ class SoftBody {
       let clr = lerpColor(color(this.hairColor), color(0), 0.2)
 
       graphics.push()
-      graphics.translate(bodyTop.x, bodyTop.y + this.radius / 15)
+      graphics.translate(bodyTop.x, bodyTop.y + this.radius / 10)
 
       graphics.rotate(bodyAngle)
 
@@ -1237,10 +1244,14 @@ class SoftBody {
       graphics.pop()
     }
 
-
-    for (let spring of this.springs) {
-      // spring.show(graphics);
+    if (showSprings) {
+      for (let spring of this.springs) {
+        spring.show(graphics);
+      }
     }
+    // for (let spring of this.springs) {
+    //   // spring.show(graphics);
+    // }
 
   }
   mouse(moveP) {
@@ -1281,21 +1292,18 @@ function setup() {
   // randomSeed(569999999999999)
   physics = new VerletPhysics2D();
 
-  let bounds = new Rect(0, 0, width, (height * 3) / 4);
-  // let bounds2 = new Rect(width / 2, height / 2 + 150, 600, 200);
+  let bounds = new Rect(0, 0, width, height);
   physics.setWorldBounds(bounds);
-  // physics.setWorldBounds(bounds2);
   physics.setDrag(0.05);
 
   physics.addBehavior(new GravityBehavior(new Vec2D(0, 0.2)));
-  // new_ball(width / 2, height / 2 - 220);
 
-  faceColor1 = random(colors)
-  faceColor2 = random(colors)
-  while (faceColor1 == faceColor2) faceColor2 = random(colors)
-  colliderColor1 = random(colors)
-  colliderColor2 = random(colors)
-  colliderColor3 = random(colors)
+  faceColor1 = random(colors1)
+  faceColor2 = random(colors1)
+  while (faceColor1 == faceColor2) faceColor2 = random(colors1)
+  colliderColor1 = random(colors1)
+  colliderColor2 = random(colors1)
+  colliderColor3 = random(colors1)
 
   let size = width * 0.31
   let shuffledColors = random(allColorsArr).slice().sort((a, b) => random() - 0.5);
@@ -1324,8 +1332,8 @@ function setup() {
     isDouble: random([0, 1]),
     eyesType: random(eyesType),
     mouthType: random(mouthType),
-    // headwear: random(headwear),
-    headwear: "Cat",
+    headwear: random(headwear),
+    // headwear: "Cat",
     // accessories: "Ear",
     accessories: random(accessories),
     bodySize: random(bodySize)
@@ -1354,17 +1362,6 @@ function draw() {
     originalGraphics.line(i, 0, i, height)
   }
 
-  originalGraphics.push();
-  originalGraphics.strokeWeight(obj.radius / 30);
-  originalGraphics.stroke("#282828");
-  originalGraphics.fill(colliderColor1);
-  originalGraphics.rect(width / 2 - 200, height * 3 / 4, 400, height);
-  originalGraphics.fill(colliderColor2);
-  originalGraphics.ellipse(width / 2, height * 3 / 4 + 15, width * 0.8, 100);
-  originalGraphics.fill(colliderColor3);
-  originalGraphics.ellipse(width / 2, height * 3 / 4, width * 0.8, 100);
-  originalGraphics.pop();
-
   obj.display(originalGraphics)
   obj.mouse(moveP)
 
@@ -1374,158 +1371,3 @@ function draw() {
 
 
 
-function new_ball(xx, yy) {
-  // physics.clear();
-  // physics = new VerletPhysics2D();
-  // particles = [];
-  // springs = [];
-  let particlesTemp = [];
-  // physics.addBehavior(new GravityBehavior(new Vec2D(0, 0.5)));
-
-  // let bounds = new Rect(0, 0, width, height);
-  // physics.setWorldBounds(bounds);
-  // var points = font.textToPoints(key, width / 2 - 90, 180, 360, {
-  //   sampleFactor: 0.05,
-  // });
-
-  // particles.push(new Particle(200, 100));
-  //   particles.push(new Particle(400, 100));
-  //   particles.push(new Particle(350, 200));
-  //   particles.push(new Particle(400, 300));
-  //   particles.push(new Particle(200, 300));
-  //   particles.push(new Particle(250, 200));
-
-  //   springs.push(new Spring(particles[0], particles[1], 0.01));
-  //   springs.push(new Spring(particles[1], particles[2], 0.01));
-  //   springs.push(new Spring(particles[2], particles[3], 0.01));
-  //   springs.push(new Spring(particles[3], particles[4], 0.01));
-  //   springs.push(new Spring(particles[4], particles[5], 0.01));
-  //   springs.push(new Spring(particles[5], particles[0], 0.01));
-  //   springs.push(new Spring(particles[5], particles[2], 1));
-  //   springs.push(new Spring(particles[0], particles[3], 0.01));
-  //   springs.push(new Spring(particles[1], particles[4], 0.01));
-
-  particles.push(new Particle(xx, yy));
-  // drawHeart(xx,yy,10)
-  scribbleEllipse(xx, yy, 200, 200, particles);
-  //   for (var a=0; a<TWO_PI;a+=TWO_PI/vertices_amount) {
-  //     var x = xx+r*sin(a);
-  //     var y = yy+r*cos(a);
-
-  //     var new_x = x + (
-  //                 noise(
-  //         ((x_off+x)/NOISE_SCALE),
-  //         ((y_off+y)/NOISE_SCALE),
-  //                z_off) * px_offset * sin(a));
-
-  //     var new_y = y + (
-  //                 noise(
-  //         ((x_off+x)/NOISE_SCALE),
-  //         ((y_off+y)/NOISE_SCALE),
-  //                z_off) * px_offset * cos(a))
-
-  //         let particle = new Particle(new_x,new_y,"body");
-  //     particles.push(particle);
-  //     particlesTemp.push(particle);
-  //   }
-
-
-  eyes.push(new Particle(xx - r / 8, yy));
-  eyes.push(new Particle(xx + r / 8, yy));
-  eyes.push(new Particle(xx - r / 8, yy - r / 16));
-  eyes.push(new Particle(xx + r / 8, yy - r / 16));
-  eyes.push(new Particle(xx, yy + r / 16));
-
-  // for (var i = 0; i < points.length; i++) {
-  //   let pt = points[i];
-  //   let particle = new Particle(pt.x, pt.y);
-  //   particles.push(particle);
-  // }
-
-  for (let i = 0; i < particles.length; i++) {
-    for (let j = i + 1; j < particles.length; j++) {
-      if (i !== j) {
-        if (random(1) < 0.9) {
-          let a = particles[i];
-          let b = particles[j];
-          // let b = particles[(i + 1) % particles.length];
-          springs.push(new Spring(a, b, bodySpringStrength));
-        }
-      }
-    }
-  }
-
-
-
-  for (let particle of particles) {
-    springs.push(new Spring(particle, eyes[0], bodySpringStrength));
-    springs.push(new Spring(particle, eyes[1], bodySpringStrength));
-    springs.push(new Spring(particle, eyes[2], bodySpringStrength));
-    springs.push(new Spring(particle, eyes[3], bodySpringStrength));
-    springs.push(new Spring(particle, eyes[4], bodySpringStrength));
-  }
-  for (let i = 0; i < eyes.length; i++) {
-    for (let j = i + 1; j < eyes.length; j++) {
-      if (i !== j) {
-        if (random(1) < 0.9) {
-          let a = eyes[i];
-          let b = eyes[j];
-          // let b = particles[(i + 1) % particles.length];
-          springs.push(new Spring(a, b, bodySpringStrength));
-        }
-      }
-    }
-  }
-
-  particles2.push(new Particle(xx, yy));
-  stroke(0);
-  scribbleEllipse(xx, yy, 120, 120, particles2);
-  for (let i = 0; i < particles2.length; i++) {
-    let aa = particles2[i];
-    let bb = particles[i];
-    springs.push(new Spring(aa, bb, 2));
-
-    for (let j = i + 1; j < particles2.length; j++) {
-      if (i !== j) {
-        if (random(1) < 0.9) {
-          let a = particles2[i];
-          let b = particles2[j];
-          // let b = particles[(i + 1) % particles.length];
-          springs.push(new Spring(a, b, bodySpringStrength));
-        }
-      }
-    }
-  }
-}
-function new_rec(x, y) {
-  let colour = [random() * 255, random() * 255, random() * 255];
-
-  // 1st box
-  let p1 = new Particle(x, y);
-  let p2 = new Particle(x + 50, y);
-  let p3 = new Particle(x + 100, y);
-  let p4 = new Particle(x + 100, y + 50);
-  let p5 = new Particle(x + 50, y + 50);
-  let p6 = new Particle(x, y + 50);
-
-  particles3.push(p1);
-  particles3.push(p2);
-  particles3.push(p3);
-  particles3.push(p4);
-  particles3.push(p5);
-  particles3.push(p6);
-
-  springs.push(new Spring(p1, p2, 2));
-  springs.push(new Spring(p2, p3, 2));
-  springs.push(new Spring(p3, p4, 2));
-  springs.push(new Spring(p4, p5, 2));
-  springs.push(new Spring(p5, p6, 2));
-  springs.push(new Spring(p6, p1, 2));
-
-  // diagonals of 1st box
-  springs.push(new Spring(p1, p4, 4));
-  springs.push(new Spring(p3, p6, 4));
-  //springs.push(new Spring(p1, p5, 0, 0.9, true))
-  //springs.push(new Spring(p3, p6, 0, 0.5, true))
-  //springs.push(new Spring(p2, p4, 100, 1.0, true))
-}
