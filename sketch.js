@@ -12,7 +12,7 @@ let particles3 = [];
 let springs = [];
 let springs2 = [];
 let eyes = [];
-let bodyAngle;
+let bodyAngle, bodyTopN;
 let bodySpringStrength = 0.002; //0.0002, 0.00005
 
 let colors = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
@@ -36,6 +36,7 @@ var colors11 = "ff4e00-8ea604-f5bb00-ec9f05-bf3100".split("-").map(a => "#" + a)
 var colors12 = "ffbe0b-fb5607-ff006e-8338ec-3a86ff-eee".split("-").map(a => "#" + a)
 var colors13 = "181717-B4B7BF-D0D3D9-59554D-262626".split("-").map(a => "#" + a)
 var allColorsArr = [colors1]
+var bgClr
 // var allColorsArr = [colors1, colors2, colors3, colors4, colors5, colors6, colors7, colors8, colors9, colors10, colors11, colors12, colors13]
 
 
@@ -45,7 +46,8 @@ let mouthType = ['Thick', 'Calm', 'Compressed', 'Cute', 'Smile', 'Unhappy', 'Mon
 let headwear = ['PropellerHat', 'Fruit', 'Stack', 'Beret', 'Curly', 'Tomato', 'BowTie', 'Leaf', 'OneCurly', 'Puffy', 'Bangs', 'Cat'] //11
 let accessories = ['TShirt', 'Shirt', 'Belt', 'SlingBag', 'LittleBag', 'Ring', 'Ear']  //6
 let bodySize = ['Small', 'Medium', 'Large']
-
+let shape = ['Circle', 'HorizontalEllipse', 'VerticalEllipse', 'Heart', 'Square']
+let bgStyle = []
 let theShader;
 let webGLCanvas
 let originalGraphics
@@ -130,6 +132,7 @@ class SoftBody {
       innerP: [],
       eyesP: [],
       springs: [],
+      shape: 'Square',
       faceColor1: "#000",
       faceColor2: "#000",
       eyesDist: 10,
@@ -144,7 +147,8 @@ class SoftBody {
       eyeSizeRandom2: 1,
       mouthSizeRandom: 1,
       hairSizeRandom: 1,
-      isDouble: 0
+      isDouble: 0,
+
     }
     Object.assign(def, args)
     Object.assign(this, def)
@@ -167,18 +171,92 @@ class SoftBody {
     }
 
     //setup body points
-    this.bodyP.push(new Particle(this.startPos.x, this.startPos.y));
-    for (let t = 0; t < (TAU); t += TAU / this.segment) {
-      let fluctuation = noise(t * 120, t * 50) * 8;
+    if (this.shape == "Circle") {
+      this.bodyP.push(new Particle(this.startPos.x, this.startPos.y));
+      for (let t = 0; t < (TAU); t += TAU / this.segment) {
+        let fluctuation = noise(t * 120, t * 50) * 8;
 
-      let xx = this.startPos.x + (this.actualW + fluctuation) * cos(t),
-        yy = this.startPos.y + (this.actualH + fluctuation) * sin(t),
-        p = new Particle(xx, yy);
-      this.bodyP.push(p);
-      // originalGraphics.fill(map(t, 0, TAU, 0, 255))
-      // originalGraphics.ellipse(xx, yy, 20)
+        let xx = this.startPos.x + (this.actualW + fluctuation) * cos(t),
+          yy = this.startPos.y + (this.actualH + fluctuation) * sin(t),
+          p = new Particle(xx, yy);
+        this.bodyP.push(p);
+        // originalGraphics.fill(map(t, 0, TAU, 0, 255))
+        // originalGraphics.ellipse(xx, yy, 20)
+
+      }
+
+    } else if (this.shape == "HorizontalEllipse") {
+      this.bodyP.push(new Particle(this.startPos.x, this.startPos.y));
+      let sMultiply = map(this.bodySizeRandom, 0, 1, 1.2, 1.25)
+      for (let t = 0; t < (TAU); t += TAU / this.segment) {
+        let fluctuation = noise(t * 120, t * 50) * 8;
+
+        let xx = this.startPos.x + (this.actualW + fluctuation) * sMultiply * cos(t),
+          yy = this.startPos.y + (this.actualH + fluctuation) * sin(t),
+          p = new Particle(xx, yy);
+        this.bodyP.push(p);
+        // originalGraphics.fill(map(t, 0, TAU, 0, 255))
+        // originalGraphics.ellipse(xx, yy, 20)
+
+      }
+
+    } else if (this.shape == "VerticalEllipse") {
+      this.bodyP.push(new Particle(this.startPos.x, this.startPos.y));
+      let sMultiply = map(this.bodySizeRandom, 0, 1, 1.15, 1.2)
+      for (let t = 0; t < (TAU); t += TAU / this.segment) {
+        let fluctuation = noise(t * 120, t * 50) * 8;
+
+        let xx = this.startPos.x + (this.actualW + fluctuation) * cos(t),
+          yy = this.startPos.y + (this.actualH + fluctuation) * sMultiply * sin(t),
+          p = new Particle(xx, yy);
+        this.bodyP.push(p);
+        // originalGraphics.fill(map(t, 0, TAU, 0, 255))
+        // originalGraphics.ellipse(xx, yy, 20)
+
+      }
+
+    } else if (this.shape == "Heart") {
+      this.bodyP.push(new Particle(this.startPos.x, this.startPos.y - this.actualH));
+      for (let a = 0; a < TAU; a += TAU / this.segment) {
+        let r = height / 10;
+        let r2 = r * (1 - sin(a))
+        let xx = this.startPos.x + (this.actualW * (1 - sin(a))) * cos(a);
+        let yy = this.startPos.y + (this.actualH * (1 - sin(a))) * sin(a);
+        // vertex(xx,yy);
+        this.bodyP.push(new Particle(xx, yy));
+      }
+    } else if (this.shape == "Square") {
+      this.bodyP.push(new Particle(this.startPos.x, this.startPos.y));
+      let r = this.actualW
+      for (let i = 0; i < 8; i++) {
+        // ellipse(i,-r,10)
+        this.bodyP.push(new Particle(this.startPos.x + (-r + i * (r * 2 / 8)), this.startPos.y - r))
+      }
+      for (let i = 0; i < 8; i++) {
+        fill(255, 0, 0)
+        // ellipse(r,i,10)
+        this.bodyP.push(new Particle(this.startPos.x + r, this.startPos.y + (-r + i * (r * 2 / 8))))
+
+      }
+      for (let i = 0; i < 8; i++) {
+        fill(0, 255, 0)
+        // ellipse(i,r,10)
+        this.bodyP.push(new Particle(this.startPos.x + (r - i * (r * 2 / 8)), this.startPos.y + r))
+
+      }
+      for (let i = 0; i < 8; i++) {
+        fill(0, 0, 255)
+        // ellipse(-r,i,10)
+        this.bodyP.push(new Particle(this.startPos.x - r, this.startPos.y + (r - i * (r * 2 / 8))))
+
+      }
+
+
 
     }
+
+
+
 
     // // set up body springs (top drag)
     // let bodyTopN = int(this.bodyP.length * 3 / 4) + 1
@@ -291,34 +369,102 @@ class SoftBody {
     // }
   }
   display(graphics) {
-    let bodyRight = createVector(this.bodyP[1].x, this.bodyP[1].y);
-    let bodyCenter = createVector(this.bodyP[0].x, this.bodyP[0].y);
-    let bodyLeft = createVector(
-      this.bodyP[int(this.bodyP.length / 2) + 1].x,
-      this.bodyP[int(this.bodyP.length / 2) + 1].y
-    );
-    let bodyTop = createVector(
-      this.bodyP[int(this.bodyP.length * 3 / 4) + 1].x,
-      this.bodyP[int(this.bodyP.length * 3 / 4) + 1].y
-    );
-    let bodyLowerRight = createVector(
-      this.bodyP[int(this.bodyP.length / 8) + 1].x,
-      this.bodyP[int(this.bodyP.length / 8) + 1].y
-    );
-    let eyeMid = createVector((this.eyesP[0].x + this.eyesP[1].x) / 2, (this.eyesP[0].y + this.eyesP[1].y) / 2)
-    let lfAverage = createVector((bodyLeft.x + bodyRight.x) / 2, (bodyLeft.y + bodyRight.y) / 2)
+    let bodyRight, bodyCenter, bodyLeft, bodyTop, bodyLowerRight, eyeMid, lfAverage
+    if (this.shape == "Circle" || this.shape == "HorizontalEllipse" || this.shape == "VerticalEllipse") {
+      bodyRight = createVector(this.bodyP[1].x, this.bodyP[1].y);
+      bodyCenter = createVector(this.bodyP[0].x, this.bodyP[0].y);
+      bodyLeft = createVector(
+        this.bodyP[int(this.bodyP.length / 2) + 1].x,
+        this.bodyP[int(this.bodyP.length / 2) + 1].y
+      );
+      bodyTop = createVector(
+        this.bodyP[int(this.bodyP.length * 3 / 4) + 1].x,
+        this.bodyP[int(this.bodyP.length * 3 / 4) + 1].y
+      );
+      bodyLowerRight = createVector(
+        this.bodyP[int(this.bodyP.length / 8) + 1].x,
+        this.bodyP[int(this.bodyP.length / 8) + 1].y
+      );
+      eyeMid = createVector((this.eyesP[0].x + this.eyesP[1].x) / 2, (this.eyesP[0].y + this.eyesP[1].y) / 2)
+      lfAverage = createVector((bodyLeft.x + bodyRight.x) / 2, (bodyLeft.y + bodyRight.y) / 2)
 
-    let bodyTopN = int(this.bodyP.length * 3 / 4) + 1
+      bodyTopN = int(this.bodyP.length * 3 / 4) + 1
 
-    bodyAngle = atan2(bodyRight.y - bodyLeft.y, bodyRight.x - bodyLeft.x);
+      bodyAngle = atan2(bodyRight.y - bodyLeft.y, bodyRight.x - bodyLeft.x);
 
-    //important pos
-    // graphics.fill(255, 0, 0)
-    // graphics.ellipse(bodyRight.x, bodyRight.y, 40)
-    // graphics.fill(0, 255, 0)
-    // graphics.ellipse(bodyTop.x, bodyTop.y, 40)
-    // graphics.fill(0, 0, 255)
-    // graphics.ellipse(bodyLeft.x, bodyLeft.y, 40)
+      //important pos
+      // graphics.fill(255, 0, 0)
+      // graphics.ellipse(bodyRight.x, bodyRight.y, 40)
+      // graphics.fill(0, 255, 0)
+      // graphics.ellipse(bodyTop.x, bodyTop.y, 40)
+      // graphics.fill(0, 0, 255)
+      // graphics.ellipse(bodyLeft.x, bodyLeft.y, 40)
+    } else if (this.shape == "Heart") {
+
+      bodyRight = createVector(this.bodyP[26].x, this.bodyP[26].y);
+      bodyCenter = createVector(this.bodyP[0].x, this.bodyP[0].y);
+      bodyLeft = createVector(
+        this.bodyP[17].x,
+        this.bodyP[17].y
+      );
+      bodyTopN = 7
+      bodyTop = createVector(
+        this.bodyP[bodyTopN].x,
+        this.bodyP[bodyTopN].y
+      );
+      bodyLowerRight = createVector(
+        this.bodyP[25].x,
+        this.bodyP[25].y
+      );
+      eyeMid = createVector((this.eyesP[0].x + this.eyesP[1].x) / 2, (this.eyesP[0].y + this.eyesP[1].y) / 2)
+      lfAverage = createVector((bodyLeft.x + bodyRight.x) / 2, (bodyLeft.y + bodyRight.y) / 2)
+
+
+
+      bodyAngle = atan2(bodyRight.y - bodyLeft.y, bodyRight.x - bodyLeft.x);
+
+      //important pos
+      graphics.fill(255, 0, 0)
+      graphics.ellipse(bodyRight.x, bodyRight.y, 40)
+      graphics.ellipse(bodyLowerRight.x, bodyLowerRight.y, 40)
+      graphics.fill(0, 255, 0)
+      graphics.ellipse(bodyTop.x, bodyTop.y, 40)
+      graphics.fill(0, 0, 255)
+      graphics.ellipse(bodyLeft.x, bodyLeft.y, 40)
+    } else if (this.shape == "Square") {
+
+      bodyRight = createVector(this.bodyP[13].x, this.bodyP[13].y);
+      bodyCenter = createVector(this.bodyP[0].x, this.bodyP[0].y);
+      bodyLeft = createVector(
+        this.bodyP[28].x,
+        this.bodyP[28].y
+      );
+      bodyTopN = 4
+      bodyTop = createVector(
+        this.bodyP[bodyTopN].x,
+        this.bodyP[bodyTopN].y
+      );
+      bodyLowerRight = createVector(
+        this.bodyP[16].x,
+        this.bodyP[16].y
+      );
+      eyeMid = createVector((this.eyesP[0].x + this.eyesP[1].x) / 2, (this.eyesP[0].y + this.eyesP[1].y) / 2)
+      lfAverage = createVector((bodyLeft.x + bodyRight.x) / 2, (bodyLeft.y + bodyRight.y) / 2)
+
+
+
+      bodyAngle = atan2(bodyRight.y - bodyLeft.y, bodyRight.x - bodyLeft.x);
+
+      //important pos
+      graphics.fill(255, 0, 0)
+      graphics.ellipse(bodyRight.x, bodyRight.y, 40)
+      // graphics.ellipse(bodyLowerRight.x, bodyLowerRight.y, 40)
+      graphics.fill(0, 255, 0)
+      graphics.ellipse(bodyTop.x, bodyTop.y, 40)
+      graphics.fill(0, 0, 255)
+      graphics.ellipse(bodyLeft.x, bodyLeft.y, 40)
+    }
+
 
 
     graphics.stroke("#282828");
@@ -358,7 +504,7 @@ class SoftBody {
     let clr = color(this.bodyColor2)
     clr.setAlpha(150)
     graphics.fill(this.bodyColor);
-    graphics.ellipse(lfAverage.x, lfAverage.y, max(this.actualW, this.actualH) * 2)
+    graphics.ellipse(lfAverage.x, lfAverage.y, max(this.actualW, this.actualH) * 2.5)
 
     //inner circle
     if (this.isDouble) {
@@ -404,6 +550,10 @@ class SoftBody {
       graphics.arc(0, this.actualH / 5, this.radius / 2, this.radius / 3, 0, PI, OPEN)
       graphics.strokeWeight(this.radius / 30)
       graphics.arc(0, this.actualH / 5, this.radius / 3, this.radius / 6, 0, PI, OPEN)
+      // graphics.noFill()
+      // graphics.strokeWeight(this.radius / 50)
+      // graphics.rect(this.actualW / 3, this.actualW / 3, this.actualW / 5, this.actualW / 4, 0, 0, this.actualW / 15, this.actualW / 15)
+
     } if (this.accessories == "Shirt") {
       let s = this.radius / 15
       let shirtClr = lerpColor(color(this.decoColor), color("#ffffff"), 0.8)  //if double
@@ -514,12 +664,15 @@ class SoftBody {
         // graphics.ellipse(this.bodyP[bodyTopN + 1].x, this.bodyP[bodyTopN + 1].y, 50)
       } else {
         graphics.curveVertex(this.bodyP[i].x, this.bodyP[i].y);
-        // graphics.fill(map(i, 1, this.bodyP.length, 0, 255))
-        // graphics.ellipse(this.bodyP[i].x, this.bodyP[i].y, 20)
+        // graphics.stroke(map(i, 1, this.bodyP.length, 0, 255))
+        // graphics.ellipse(this.bodyP[i].x, this.bodyP[i].y, 10)
+        // graphics.stroke(map(i, 1, this.bodyP.length, 0, 255))
+        // graphics.strokeWeight(1)
+        // graphics.text(i, this.bodyP[i].x, this.bodyP[i].y)
 
       }
-
     }
+
     // graphics.fill(255)
     // graphics.ellipse(this.bodyP[0].x, this.bodyP[0].y, 10)
 
@@ -533,7 +686,11 @@ class SoftBody {
       let bagClr = lerpColor(color(this.decoColor), (this.isDouble) ? color(this.bodyColor2) : color(this.bodyColor), 0.3)  //if double
 
       graphics.push();
-      graphics.translate(bodyLowerRight.x, bodyLowerRight.y + this.actualW / 12)
+      if (this.shape == "Square") {
+        graphics.translate(bodyLowerRight.x, bodyLowerRight.y)
+      } else {
+        graphics.translate(bodyLowerRight.x, bodyLowerRight.y + this.actualW / 12)
+      }
       graphics.fill(this.decoColor)
       graphics.rectMode(CENTER)
       graphics.rect(0, 0, this.actualW / 5, this.actualW / 4, 0, 0, this.actualW / 20, this.actualW / 20)
@@ -1258,7 +1415,7 @@ class SoftBody {
     if (mouseIsPressed) {
       let movePos = this.particles[0]
       if (moveP == "Top") {
-        movePos = this.particles[int(this.bodyP.length * 3 / 4) + 1]
+        movePos = this.particles[bodyTopN]
       } else if (moveP == "Center") {
         movePos = this.particles[0]
       }
@@ -1273,8 +1430,8 @@ class SoftBody {
 }
 function mousePressed() {
   mousePressedPos = createVector(mouseX, mouseY)
-  let topPointDist = dist(mouseX, mouseY, obj.bodyP[int(obj.bodyP.length * 3 / 4) + 1].x,
-    obj.bodyP[int(obj.bodyP.length * 3 / 4) + 1].y)
+  let topPointDist = dist(mouseX, mouseY, obj.bodyP[bodyTopN].x,
+    obj.bodyP[bodyTopN].y)
   if (topPointDist < obj.radius / 4) {
     moveP = "Top"
   } else {
@@ -1308,6 +1465,10 @@ function setup() {
   let size = width * 0.31
   let shuffledColors = random(allColorsArr).slice().sort((a, b) => random() - 0.5);
   let removeBodyColors = shuffledColors.slice(2);
+
+  // let shuffledColors2 = random(shuffledColors).slice().sort((a, b) => random() - 0.5);
+  // bgClr = shuffledColors.slice(0, 2);
+
   obj = new SoftBody({
     shuffledColors: shuffledColors,
     removeBodyColors: removeBodyColors,
@@ -1333,8 +1494,9 @@ function setup() {
     eyesType: random(eyesType),
     mouthType: random(mouthType),
     headwear: random(headwear),
-    // headwear: "Cat",
-    // accessories: "Ear",
+    shape: random(shape),
+    // headwear: "N",
+    // accessories: "LittleBag",
     accessories: random(accessories),
     bodySize: random(bodySize)
   })
@@ -1371,3 +1533,21 @@ function draw() {
 
 
 
+
+function drawWave(id, span, amp, yPos, angle, clr) {
+  push()
+  fill(clr)
+  translate(width / 2, height)
+  rotate(angle)
+  beginShape()
+  curveVertex(-width, 0)
+  curveVertex(-width, 0)
+  for (let x = -width; x < width; x += width / span) {
+    curveVertex(x,
+      yPos - noise(x / 100, id + x / 200) * amp)
+  }
+  curveVertex(width, 0)
+  curveVertex(-width, 0)
+  endShape()
+  pop()
+}
