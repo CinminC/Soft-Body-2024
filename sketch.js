@@ -15,6 +15,8 @@ let eyes = [];
 let bodyAngle, bodyTopN;
 let bodySpringStrength = 0.002; //0.0002, 0.00005
 
+let id
+
 let colors = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
 // let colors1 = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
 var colors1 = "7b91e9-17c3b2-f5b800-ecf238-fa5a62".split("-").map(a => "#" + a)
@@ -47,12 +49,14 @@ let headwear = ['PropellerHat', 'Fruit', 'Stack', 'Beret', 'Curly', 'Tomato', 'B
 let accessories = ['TShirt', 'Shirt', 'Belt', 'SlingBag', 'LittleBag', 'Ring', 'Ear']  //6
 let bodySize = ['Small', 'Medium', 'Large']
 let shape = ['Circle', 'HorizontalEllipse', 'VerticalEllipse', 'Heart', 'Square']
-let bgStyle = []
+let bgStyle = ['Lines', 'Mountain', 'Grid', 'Frame', 'Spiral', 'Wavy']
 let theShader;
 let webGLCanvas
 let originalGraphics
 
 let obj
+let finalBackground;
+let bgRandom
 
 let mousePressedPos
 let moveP
@@ -424,13 +428,13 @@ class SoftBody {
       bodyAngle = atan2(bodyRight.y - bodyLeft.y, bodyRight.x - bodyLeft.x);
 
       //important pos
-      graphics.fill(255, 0, 0)
-      graphics.ellipse(bodyRight.x, bodyRight.y, 40)
-      graphics.ellipse(bodyLowerRight.x, bodyLowerRight.y, 40)
-      graphics.fill(0, 255, 0)
-      graphics.ellipse(bodyTop.x, bodyTop.y, 40)
-      graphics.fill(0, 0, 255)
-      graphics.ellipse(bodyLeft.x, bodyLeft.y, 40)
+      // graphics.fill(255, 0, 0)
+      // graphics.ellipse(bodyRight.x, bodyRight.y, 40)
+      // graphics.ellipse(bodyLowerRight.x, bodyLowerRight.y, 40)
+      // graphics.fill(0, 255, 0)
+      // graphics.ellipse(bodyTop.x, bodyTop.y, 40)
+      // graphics.fill(0, 0, 255)
+      // graphics.ellipse(bodyLeft.x, bodyLeft.y, 40)
     } else if (this.shape == "Square") {
 
       bodyRight = createVector(this.bodyP[13].x, this.bodyP[13].y);
@@ -456,13 +460,13 @@ class SoftBody {
       bodyAngle = atan2(bodyRight.y - bodyLeft.y, bodyRight.x - bodyLeft.x);
 
       //important pos
-      graphics.fill(255, 0, 0)
-      graphics.ellipse(bodyRight.x, bodyRight.y, 40)
+      // graphics.fill(255, 0, 0)
+      // graphics.ellipse(bodyRight.x, bodyRight.y, 40)
       // graphics.ellipse(bodyLowerRight.x, bodyLowerRight.y, 40)
-      graphics.fill(0, 255, 0)
-      graphics.ellipse(bodyTop.x, bodyTop.y, 40)
-      graphics.fill(0, 0, 255)
-      graphics.ellipse(bodyLeft.x, bodyLeft.y, 40)
+      // graphics.fill(0, 255, 0)
+      // graphics.ellipse(bodyTop.x, bodyTop.y, 40)
+      // graphics.fill(0, 0, 255)
+      // graphics.ellipse(bodyLeft.x, bodyLeft.y, 40)
     }
 
 
@@ -1466,8 +1470,8 @@ function setup() {
   let shuffledColors = random(allColorsArr).slice().sort((a, b) => random() - 0.5);
   let removeBodyColors = shuffledColors.slice(2);
 
-  // let shuffledColors2 = random(shuffledColors).slice().sort((a, b) => random() - 0.5);
-  // bgClr = shuffledColors.slice(0, 2);
+  let shuffledColors2 = random(allColorsArr).slice().sort((a, b) => random() - 0.5);
+  bgClr = shuffledColors2.slice(0, 3);
 
   obj = new SoftBody({
     shuffledColors: shuffledColors,
@@ -1502,10 +1506,15 @@ function setup() {
   })
   obj.init()
 
+  finalBackground = "Wavy"
+  bgRandom = random(1)
+  id = random(10000000)
+  // finalBackground=random(bgStyle)
 }
 
 
 function draw() {
+  //texture shader 
   webGLCanvas.shader(theShader)
   theShader.setUniform('u_resolution', [width / 1000, height / 1000])
   theShader.setUniform('u_time', millis() / 1000)
@@ -1514,16 +1523,142 @@ function draw() {
   webGLCanvas.clear()
   webGLCanvas.rect(-width / 2, -height / 2, width, height)
 
+  //physics
   physics.update();
 
-  originalGraphics.background("#EAE7D6");
-  originalGraphics.stroke(200)
-  originalGraphics.strokeWeight(0.5)
-  let span = 15
-  for (let i = 0; i < width; i += span) {
-    originalGraphics.line(i, 0, i, height)
+  //background
+  let bgClr1 = color(bgClr[0])
+  let bgClr2 = color(bgClr[1])
+  let bgClr3 = color(bgClr[2])
+
+  if (finalBackground == 'Lines') {
+    // originalGraphics.background("#EAE7D6");
+    // originalGraphics.stroke(200)
+    // originalGraphics.strokeWeight(0.5)
+    // let span = 15
+    // for (let i = 0; i < width; i += span) {
+    //   originalGraphics.line(i, 0, i, height)
+    // }
+    originalGraphics.push()
+    bgClr1 = lerpColor(bgClr1, color(245), 0.6)
+    originalGraphics.background(bgClr1);
+    bgClr2.setAlpha(200)
+    originalGraphics.stroke(bgClr2)
+    originalGraphics.strokeWeight(map(bgRandom, 0, 1, 2, 30))
+    let span = map(bgRandom, 0, 1, 15, 45)
+    // 2,15,30,45
+    for (let i = 0; i < width * 1.1; i += span) {
+      originalGraphics.line(i, 0, i, height)
+    }
+    originalGraphics.pop()
+  } else if (finalBackground == 'Mountain') {
+    originalGraphics.push()
+
+    bgClr1 = lerpColor(bgClr1, color(255), 0.9)
+
+    originalGraphics.background(bgClr1);
+
+    originalGraphics.noStroke()
+    let bgClr2Alpha = color(bgClr[1])
+    bgClr2Alpha.setAlpha(50)
+
+    drawWave(1213, 10, 100, -height / 1.5, 0, bgClr2Alpha, originalGraphics)
+    drawWave(435, 10, 150, -height / 2, -PI / 12, lerpColor(bgClr2, color(255), 0.5), originalGraphics)
+    drawWave(655, 30, 100, -height / 3, PI / 20, lerpColor(bgClr2, color(255), 0.2), originalGraphics)
+    bgClr3.setAlpha(200)
+    drawWave(454, 8, 20, -height / 4, 0, bgClr3, originalGraphics)
+    originalGraphics.pop()
+  } else if (finalBackground == 'Grid') {
+    originalGraphics.push()
+    bgClr1 = lerpColor(bgClr1, color(250), 0.9)
+    originalGraphics.background(bgClr1);
+    bgClr2.setAlpha(80)
+    originalGraphics.fill(bgClr2)
+    originalGraphics.noStroke()
+
+    // originalGraphics.strokeWeight(map(bgRandom, 0, 1, 2, 30))
+    let w = 60
+    // 2,15,30,45
+    for (let i = 0; i < width; i += width / 13 * 2) {
+      originalGraphics.rect(i, 0, width / 13, height)
+    }
+    for (let i = 0; i < height; i += height / 13 * 2) {
+      originalGraphics.rect(0, i, width, height / 13)
+    }
+    originalGraphics.pop()
+  } else if (finalBackground == 'Spiral') {
+    originalGraphics.push()
+    bgClr1 = lerpColor(bgClr1, color(245), 0.6)
+    originalGraphics.background(bgClr1);
+    bgClr2 = lerpColor(bgClr1, color(255), 0.8)
+    originalGraphics.stroke(bgClr2)
+    originalGraphics.strokeWeight(10)
+    originalGraphics.noFill()
+    let w = 50
+    let h = 60
+    let xx = width / 2
+    let yy = height / 2
+    for (let j = h * 2; j <= height - h * 2; j += (height - h * 4) / 3) {
+      originalGraphics.beginShape()
+      originalGraphics.curveVertex(0, j + h / 2 * 1.25)
+      originalGraphics.curveVertex(0, j + h / 2 * 1.25)
+
+      for (let i = width / 8; i <= width - width / 8; i += (width - width / 8 * 2) / 5) {
+        drawSpiral(i, j, (width - width / 8 * 2) / 15, h, originalGraphics)
+      }
+      originalGraphics.curveVertex(width, j + h / 2 * 1.25)
+      originalGraphics.curveVertex(width, j + h / 2 * 1.25)
+      originalGraphics.endShape()
+    }
+
+    originalGraphics.pop()
+  } else if (finalBackground == 'Frame') {
+    originalGraphics.push()
+    bgClr1 = lerpColor(bgClr1, color(255), 0.2)
+    originalGraphics.background(bgClr1);
+    bgClr2 = lerpColor(bgClr2, color(255), 0.85)
+    originalGraphics.fill(bgClr2)
+    originalGraphics.noStroke()
+
+    originalGraphics.translate(width / 2, height / 2)
+    originalGraphics.rectMode(CENTER)
+    originalGraphics.rect(0, 0, width / 1.3, height / 1.5)
+    let bgClr1Temp = lerpColor(bgClr1, color(0), 0.6)
+    bgClr1.setAlpha(100)
+    originalGraphics.stroke(bgClr1Temp)
+    originalGraphics.fill(bgClr1)
+    originalGraphics.rect(0, 0, width / 1.3 - width / 15, height / 1.5 - width / 15)
+
+    originalGraphics.pop()
+  } else if (finalBackground == 'Wavy') {
+    originalGraphics.push()
+    originalGraphics.scale(1.5)
+    let angle = map(bgRandom, 0, 1, -PI / 8, PI / 8)
+    bgClr1 = lerpColor(bgClr1, color(255), 0.3)
+    bgClr2 = lerpColor(bgClr2, color(255), 0.3)
+    bgClr3 = lerpColor(bgClr3, color(255), 0.3)
+    originalGraphics.stroke(bgClr3)
+    originalGraphics.strokeWeight(10)
+    originalGraphics.background(bgClr3);
+
+    for (let y = -height; y < 0; y += height / 10) {
+      let ratio = map(y, 0, -height, 0, 1)
+      // let clrTemp = lerpColor(bgClr1, bgClr2, ratio)
+      if (noise(y * 4100, y * 5700) <= 0.25) {
+        clrTemp = bgClr1
+      } else if (noise(y * 4100, y * 5700) > 0.25 && (noise(y * 4100, y * 5700) <= 0.5)) {
+        clrTemp = bgClr2
+      } else if (noise(y * 4100, y * 5700) > 0.5) {
+        clrTemp = bgClr3
+      }
+      drawWave(y * 10, 10, 100, y, angle, clrTemp, originalGraphics)
+
+    }
+
+    originalGraphics.pop()
   }
 
+  //character
   obj.display(originalGraphics)
   obj.mouse(moveP)
 
@@ -1534,20 +1669,70 @@ function draw() {
 
 
 
-function drawWave(id, span, amp, yPos, angle, clr) {
-  push()
-  fill(clr)
-  translate(width / 2, height)
-  rotate(angle)
-  beginShape()
-  curveVertex(-width, 0)
-  curveVertex(-width, 0)
-  for (let x = -width; x < width; x += width / span) {
-    curveVertex(x,
+function drawWave(id, seg, amp, yPos, angle, clr, graphics) {
+  graphics.push()
+  graphics.fill(clr)
+  graphics.translate(width / 2, height)
+  graphics.rotate(angle)
+  graphics.beginShape()
+  graphics.curveVertex(-width, 0)
+  graphics.curveVertex(-width, 0)
+  for (let x = -width; x < width; x += width / seg) {
+    graphics.curveVertex(x,
       yPos - noise(x / 100, id + x / 200) * amp)
   }
-  curveVertex(width, 0)
-  curveVertex(-width, 0)
-  endShape()
+  graphics.curveVertex(width, 0)
+  graphics.curveVertex(-width, 0)
+  graphics.endShape()
+  graphics.pop()
+}
+
+function drawSpiral(xx, yy, w, h, graphics) {
+  // curveVertex(xx+-w*1.25,yy+h/2*1.45)
+
+  // curveVertex(xx+-w,yy+h/2*1.25)
+  graphics.curveVertex(xx + -w, yy + h / 2 * 1.25)
+  graphics.curveVertex(xx, yy + h / 2)
+  graphics.curveVertex(xx + w / 2 * cos(PI / 4), yy + h / 2 * sin(PI / 4))
+
+  graphics.curveVertex(xx + w / 2, yy)
+  graphics.curveVertex(xx + w / 2 * cos(-PI / 4), yy + h / 2 * sin(-PI / 4))
+
+  graphics.curveVertex(xx, yy + -h / 2)
+  graphics.curveVertex(xx + w / 2 * cos(-PI * 3 / 4), yy + h / 2 * sin(-PI * 3 / 4))
+
+  graphics.curveVertex(xx - w / 2, yy)
+  graphics.curveVertex(xx + w / 2 * cos(PI * 3 / 4), yy + h / 2 * sin(PI * 3 / 4))
+
+  graphics.curveVertex(xx, yy + h / 2)
+
+  graphics.curveVertex(xx + w, yy + h / 2 * 1.25)
+
+
+
+}
+
+function drawHint(xx, yy, w, h) {
+  push()
+  stroke(255, 100)
+  point(xx + -w, yy + h / 2 * 1.25)
+  point(xx + -w, yy + h / 2 * 1.25)
+  point(xx, yy + h / 2)
+  point(xx + w / 2 * cos(PI / 4), yy + h / 2 * sin(PI / 4))
+
+  point(xx + w / 2, yy)
+  point(xx + w / 2 * cos(-PI / 4), yy + h / 2 * sin(-PI / 4))
+  ellipse(xx + w / 2 * cos(-PI / 4), yy + h / 2 * sin(-PI / 4), 5)
+
+  point(xx, yy + -h / 2)
+  point(xx + w / 2 * cos(-PI * 3 / 4), yy + h / 2 * sin(-PI * 3 / 4))
+
+  point(xx - w / 2, yy)
+  point(xx + w / 2 * cos(PI * 3 / 4), yy + h / 2 * sin(PI * 3 / 4))
+
+  point(xx, yy + h / 2)
+
+  point(xx + w, yy + h / 2 * 1.25)
+  point(xx + w, yy + h / 2 * 1.25)
   pop()
 }
