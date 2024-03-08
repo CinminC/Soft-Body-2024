@@ -48,7 +48,7 @@ let mouthType = ['Thick', 'Calm', 'Compressed', 'Cute', 'Smile', 'Unhappy', 'Mon
 let headwear = ['PropellerHat', 'Fruit', 'Stack', 'Beret', 'Curly', 'Tomato', 'BowTie', 'Leaf', 'OneCurly', 'Puffy', 'Bangs', 'Cat'] //11
 let accessories = ['TShirt', 'Shirt', 'Belt', 'SlingBag', 'LittleBag', 'Ring', 'Ear']  //6
 let bodySize = ['Small', 'Medium', 'Large']
-let shape = ['Circle', 'HorizontalEllipse', 'VerticalEllipse', 'Heart', 'Square']
+let shape = ['Circle', 'HorizontalEllipse', 'VerticalEllipse', 'Heart', 'Square', 'Diamond']
 let bgStyle = ['Lines', 'Mountain', 'Grid', 'Frame', 'Spiral', 'Wavy']
 let theShader;
 let webGLCanvas
@@ -254,11 +254,19 @@ class SoftBody {
         this.bodyP.push(new Particle(this.startPos.x - r, this.startPos.y + (r - i * (r * 2 / 8))))
 
       }
+    } else if (this.shape == "Diamond") {
+      this.bodyP.push(new Particle(this.startPos.x, this.startPos.y - this.actualH));
+      let na = 2 / 1.31;
 
-
-
+      for (let a = 0; a < TAU; a += TAU / this.segment) {
+        let r = height / 10;
+        let r2 = r * (1 - sin(a))
+        let xx = this.startPos.x + pow(abs(cos(a)), na) * this.actualW * sgn(cos(a));
+        let yy = this.startPos.y + pow(abs(sin(a)), na) * this.actualH * sgn(sin(a));
+        // vertex(xx,yy);
+        this.bodyP.push(new Particle(xx, yy));
+      }
     }
-
 
 
 
@@ -457,6 +465,35 @@ class SoftBody {
 
 
 
+      bodyAngle = atan2(bodyRight.y - bodyLeft.y, bodyRight.x - bodyLeft.x);
+
+      //important pos
+      // graphics.fill(255, 0, 0)
+      // graphics.ellipse(bodyRight.x, bodyRight.y, 40)
+      // graphics.ellipse(bodyLowerRight.x, bodyLowerRight.y, 40)
+      // graphics.fill(0, 255, 0)
+      // graphics.ellipse(bodyTop.x, bodyTop.y, 40)
+      // graphics.fill(0, 0, 255)
+      // graphics.ellipse(bodyLeft.x, bodyLeft.y, 40)
+    } else if (this.shape == "Diamond") {
+
+      bodyRight = createVector(this.bodyP[1].x, this.bodyP[1].y);
+      bodyCenter = createVector(this.bodyP[0].x, this.bodyP[0].y);
+      bodyLeft = createVector(
+        this.bodyP[15].x,
+        this.bodyP[15].y
+      );
+      bodyTopN = 22
+      bodyTop = createVector(
+        this.bodyP[bodyTopN].x,
+        this.bodyP[bodyTopN].y
+      );
+      bodyLowerRight = createVector(
+        this.bodyP[5].x,
+        this.bodyP[5].y
+      );
+      eyeMid = createVector((this.eyesP[0].x + this.eyesP[1].x) / 2, (this.eyesP[0].y + this.eyesP[1].y) / 2)
+      lfAverage = createVector((bodyLeft.x + bodyRight.x) / 2, (bodyLeft.y + bodyRight.y) / 2)
       bodyAngle = atan2(bodyRight.y - bodyLeft.y, bodyRight.x - bodyLeft.x);
 
       //important pos
@@ -673,7 +710,6 @@ class SoftBody {
         // graphics.stroke(map(i, 1, this.bodyP.length, 0, 255))
         // graphics.strokeWeight(1)
         // graphics.text(i, this.bodyP[i].x, this.bodyP[i].y)
-
       }
     }
 
@@ -1641,7 +1677,7 @@ function draw() {
     originalGraphics.strokeWeight(10)
     originalGraphics.background(bgClr3);
 
-    for (let y = -height; y < 0; y += height / 10) {
+    for (let y = -height * 1.2; y < height * 0.2; y += height / 10) {
       let ratio = map(y, 0, -height, 0, 1)
       // let clrTemp = lerpColor(bgClr1, bgClr2, ratio)
       if (noise(y * 4100, y * 5700) <= 0.25) {
@@ -1667,7 +1703,12 @@ function draw() {
 }
 
 
-
+function sgn(val) {
+  if (val == 0) {
+    return 0;
+  }
+  return val / abs(val);
+}
 
 function drawWave(id, seg, amp, yPos, angle, clr, graphics) {
   graphics.push()
