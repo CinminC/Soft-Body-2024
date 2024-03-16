@@ -21,23 +21,23 @@ let colors = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
 // let colors1 = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
 var colors1 = "7b91e9-17c3b2-f5b800-ecf238-fa5a62".split("-").map(a => "#" + a)
 var colors2 = "f0c529-57acde-75b86a-913c43-f79ca2".split("-").map(a => "#" + a)
-var colors3 = "f07829-2c3fab-446b3e-cc5861-3ca0de".split("-").map(a => "#" + a)  //didnt adjust yet
-var colors4 = "f06429-4d866a-45cbe6-f0ca4d-45cbe6".split("-").map(a => "#" + a)
+var colors3 = "3692ca-f287b2-f7c044-f7c044-f287b2".split("-").map(a => "#" + a)
+var colors4 = "f07829-4d866a-45cbe6-f0ca4d-cc5861".split("-").map(a => "#" + a)
 //new colors
 // var colors5 = "#6C8C8C-#8C6D46-#D9AE79-#F2E8DF-#4a7a8c".split("-")
-var colors5 = "f08a37-69c9bb-227d52-aae657-1653a8".split("-").map(a => "#" + a)
+var colors5 = "8cbe45-6a8742-3f6e27-69c9bb-484848".split("-").map(a => "#" + a)
 // var colors6 = "#9FBFAD-#517354-#CFD982-#F2EBDC-#594432".split("-")
 var colors6 = "f0566b-6457c9-f5d42f-6457c9-f5d42f".split("-").map(a => "#" + a)
 var colors7 = "f78400-2c5694-f5e8a6-81a8e3-f5e8a6".split("-").map(a => "#" + a)
 // var colors8 = "#245473-#142F40-#8C6645-#D9B6A3-#A6877C".split("-")
 var colors8 = "78cac0-2c9094-146d70-146d70-f5dca6".split("-").map(a => "#" + a)
 // var colors9 = "#268C8C-#9EA663-#F2D8A7-#8C2F0D-#F2785C".split("-")
-var colors9 = "3692ca-f287b2-f7c044-f7c044-f287b2".split("-").map(a => "#" + a)//end here!
+var colors9 = "f5f5f5-979b9b-5a5e5e-3c3e3e-1e1f1f".split("-").map(a => "#" + a)//end here!
 var colors10 = "#3A5939-#F2ECD8-#D9A13B-#BF3F34-#732D2D".split("-")
 var colors11 = "ff4e00-8ea604-f5bb00-ec9f05-bf3100".split("-").map(a => "#" + a)
 var colors12 = "ffbe0b-fb5607-ff006e-8338ec-3a86ff-eee".split("-").map(a => "#" + a)
 var colors13 = "181717-B4B7BF-D0D3D9-59554D-262626".split("-").map(a => "#" + a)
-var allColorsArr = [colors1, colors2, colors3, colors4, colors5, colors6, colors7, colors8]
+var allColorsArr = [colors1, colors2, colors3, colors4, colors5, colors6, colors7, colors8, colors9]
 var allColorsArr = [colors9]
 var bgClr
 var shuffledColors, shuffledColors2
@@ -51,7 +51,7 @@ let headwear = ['PropellerHat', 'Fruit', 'Stack', 'Beret', 'Curly', 'Tomato', 'B
 let accessories = ['TShirt', 'Shirt', 'Belt', 'CrossbodyBag', 'LittleBag', 'Ring', 'Ear']  //6
 let bodySize = ['Small', 'Medium', 'Large']
 let shape = ['Circle', 'HorizontalEllipse', 'VerticalEllipse', 'Heart', 'Square', 'Diamond']
-let bgStyle = ['Lines', 'Mountain', 'Grid', 'Frame', 'Spiral', 'Wavy']
+let bgStyle = ['Lines', 'Mountain', 'Curve', 'Grid', 'Frame', 'Spiral', 'Wavy']
 let theShader;
 let webGLCanvas
 let originalGraphics
@@ -141,6 +141,7 @@ class SoftBody {
       shape: 'Square',
       faceColor1: "#000",
       faceColor2: "#000",
+      eyesStrokeClr: "#282828",
       eyesDist: 10,
       eyesType: "Half",
       mouthType: "Monster",
@@ -154,6 +155,7 @@ class SoftBody {
       mouthSizeRandom: 1,
       hairSizeRandom: 1,
       isDouble: 0,
+      isBodyBlack: false
 
     }
     Object.assign(def, args)
@@ -384,24 +386,42 @@ class SoftBody {
 
     //color setting
     while (this.bodyColor == this.bodyColor2) {
-      this.bodyColor2 = random(shuffledColors)
+      this.bodyColor2 = random(this.shuffledColors)
       //print("bodyColor: ")
     }
     while (this.hairColor == this.bodyColor || this.hairColor == this.bodyColor2) {
-      this.hairColor = random(shuffledColors)
+      this.hairColor = random(this.shuffledColors)
       //print("hairColor: ")
     }
     while (this.decoColor == this.bodyColor || this.decoColor == this.bodyColor2) {
-      this.decoColor = random(shuffledColors)
+      this.decoColor = random(this.shuffledColors)
       //print("decoColor: ")
     }
     while (this.decoColor2 == this.bodyColor || this.decoColor2 == this.bodyColor2) {
-      this.decoColor2 = random(shuffledColors)
+      this.decoColor2 = random(this.shuffledColors)
       //print("decoColor2: ")
     }
+    //set eyes stroke white when body is black
+    if (this.bodyColor == "#1e1f1f" && !this.isDouble) {
+      this.eyesStrokeClr = "#F5F5F5"
+      this.isBodyBlack = true
+    }
+    if (this.bodyColor2 == "#1e1f1f" && this.isDouble) {
+      this.eyesStrokeClr = "#F5F5F5"
+      this.isBodyBlack = true
+    }
+
+
+    if (this.bodyColor == "#1e1f1f" || this.bodyColor2 == "#1e1f1f") {
+      while (this.decoColor == "#1e1f1f") {
+        this.decoColor = random(this.shuffledColors)
+      }
+    }
+    print(this.background)
   }
   display(graphics) {
     let bodyRight, bodyCenter, bodyLeft, bodyTop, bodyLowerRight, eyeMid, lfAverage
+    let strokeColor = color("#282828")
     if (this.shape == "Circle" || this.shape == "HorizontalEllipse" || this.shape == "VerticalEllipse") {
       bodyRight = createVector(this.bodyP[1].x, this.bodyP[1].y);
       bodyCenter = createVector(this.bodyP[0].x, this.bodyP[0].y);
@@ -445,8 +465,8 @@ class SoftBody {
         this.bodyP[bodyTopN].y
       );
       bodyLowerRight = createVector(
-        this.bodyP[25].x,
-        this.bodyP[25].y
+        this.bodyP[24].x,
+        this.bodyP[24].y
       );
       eyeMid = createVector((this.eyesP[0].x + this.eyesP[1].x) / 2, (this.eyesP[0].y + this.eyesP[1].y) / 2)
       lfAverage = createVector((bodyLeft.x + bodyRight.x) / 2, (bodyLeft.y + bodyRight.y) / 2)
@@ -528,7 +548,7 @@ class SoftBody {
 
 
 
-    graphics.stroke("#282828");
+    graphics.stroke(strokeColor);
     graphics.strokeWeight(this.radius / 30);
     graphics.strokeJoin(ROUND);
     if (this.accessories == "Ear") {
@@ -605,7 +625,7 @@ class SoftBody {
       graphics.fill((this.isDouble) ? color(this.bodyColor2) : color(this.bodyColor)) //if double
       graphics.ellipse(0, this.actualH / 5, this.radius / 3, this.radius / 6)
 
-      graphics.stroke("#282828")
+      graphics.stroke(strokeColor)
       graphics.noFill()
       graphics.strokeWeight(this.radius / 50)
       graphics.arc(0, this.actualH / 5, this.radius / 2, this.radius / 3, 0, PI, OPEN)
@@ -648,7 +668,12 @@ class SoftBody {
       let s = dist(bodyLeft.x, bodyLeft.y, bodyRight.x, bodyRight.y)
       let r = atan2(bodyLowerRight.x - bodyLeft.x, bodyLowerRight.y, bodyLeft.y)
       let bagClr = lerpColor(color(this.decoColor), (this.isDouble) ? color(this.bodyColor2) : color(this.bodyColor), 0.5)  //if double
+      let strapClr = this.decoColor
+      if (this.isBodyBlack) {
+        bagClr = lerpColor(color(this.decoColor), color(180), 0.3)  //if double
+        strapClr = lerpColor(color(this.decoColor), color(180), 0.8)  //if double
 
+      }
       graphics.translate(lfAverage.x, lfAverage.y)
 
       graphics.rotate(bodyAngle + PI / 8)
@@ -661,23 +686,33 @@ class SoftBody {
 
       // graphics.line(bodyLeft.x, bodyLeft.y, bodyLowerRight.x, bodyLowerRight.y)
       graphics.arc(0, 0, this.actualW / 2, this.actualH / 2.5, 0, PI)
-      graphics.fill(this.decoColor)
+      graphics.fill(strapClr)
       graphics.arc(0, 0, this.actualW / 2, this.actualH / 4, 0, PI)
       graphics.arc(0, 0, this.actualW / 2, this.actualH / 6, PI, 0)
     } if (this.accessories == "LittleBag") {
       let s = dist(bodyLeft.x, bodyLeft.y, bodyRight.x, bodyRight.y)
       let r = atan2(bodyLowerRight.x - bodyLeft.x, bodyLowerRight.y, bodyLeft.y)
-      let bagClr = lerpColor(color(this.decoColor), (this.isDouble) ? color(this.bodyColor2) : color(this.bodyColor), 0.5)  //if double
-
+      let bagClr = lerpColor(color(this.decoColor), (this.isDouble) ? color(this.bodyColor2) : color(this.bodyColor), 0.3)  //if double
+      if (this.isBodyBlack) {
+        bagClr = lerpColor(color(this.decoColor), color(255), 0.3)  //if double
+      }
       graphics.translate(lfAverage.x, lfAverage.y)
       graphics.rotate(bodyAngle + PI / 8)
       graphics.rectMode(CENTER)
       graphics.noFill()
       graphics.strokeWeight(this.actualH * 0.03 + this.radius / 15)
-      graphics.arc(0, 0, this.actualW * 2, this.actualH * 0.8, 0, PI)
-      graphics.stroke(bagClr)
-      graphics.strokeWeight(this.actualH * 0.03)
-      graphics.arc(0, 0, this.actualW * 2, this.actualH * 0.8, 0, PI)
+      if (this.shape == "Heart") {
+        graphics.arc(0, 0, this.actualW * 2.2, this.actualH * 0.8, 0, PI)
+        graphics.stroke(bagClr)
+        graphics.strokeWeight(this.actualH * 0.03)
+        graphics.arc(0, 0, this.actualW * 2.2, this.actualH * 0.8, 0, PI)
+      } else {
+        graphics.arc(0, 0, this.actualW * 2, this.actualH * 0.8, 0, PI)
+        graphics.stroke(bagClr)
+        graphics.strokeWeight(this.actualH * 0.03)
+        graphics.arc(0, 0, this.actualW * 2, this.actualH * 0.8, 0, PI)
+      }
+
     } if (this.accessories == "Ring") {
       // let s = dist(bodyLeft.x, bodyLeft.y, bodyRight.x, bodyRight.y)
       // let beltClr = lerpColor(color(this.bodyColor), color("#AF724E"), 0.8)  //if double
@@ -691,7 +726,7 @@ class SoftBody {
       graphics.strokeWeight(this.actualH * 0.01)
       graphics.arc(0, this.actualH / 2.5, this.actualW * 0.45, this.actualH * 0.16, PI / 8, PI * 7 / 8)
 
-      graphics.stroke("#282828")
+      graphics.stroke(strokeColor)
       graphics.strokeWeight(this.radius / 30)
       graphics.fill("#F7D826")
       graphics.ellipse(0, this.actualH / 1.9, this.actualW * 0.18, this.actualH * 0.18)
@@ -707,7 +742,7 @@ class SoftBody {
     //outline
     graphics.push();
     graphics.noFill();
-
+    graphics.translate(-this.radius / 30, -this.radius / 35)
     graphics.beginShape();
     for (var i = 1; i < this.bodyP.length; i++) {
       if (i == bodyTopN) {
@@ -728,6 +763,7 @@ class SoftBody {
         // graphics.stroke(map(i, 1, this.bodyP.length, 0, 255))
         // graphics.ellipse(this.bodyP[i].x, this.bodyP[i].y, 10)
         // graphics.stroke(map(i, 1, this.bodyP.length, 0, 255))
+        // graphics.stroke(255)
         // graphics.strokeWeight(1)
         // graphics.text(i, this.bodyP[i].x, this.bodyP[i].y)
       }
@@ -744,14 +780,20 @@ class SoftBody {
 
     if (this.accessories == "LittleBag") {
       let bagClr = lerpColor(color(this.decoColor), (this.isDouble) ? color(this.bodyColor2) : color(this.bodyColor), 0.3)  //if double
+      let strapClr = this.decoColor
+      if (this.isBodyBlack) {
+        bagClr = lerpColor(color(this.decoColor), color(255), 0.3)  //if double
+        strapClr = lerpColor(color(this.decoColor), color(255), 0.5)  //if double
 
+      }
       graphics.push();
-      if (this.shape == "Square") {
+      if (this.shape == "Square" || this.shape == "VerticalEllipse" || this.shape == "Heart" || this.shape == "Diamond") {
         graphics.translate(bodyLowerRight.x, bodyLowerRight.y)
       } else {
         graphics.translate(bodyLowerRight.x, bodyLowerRight.y + this.actualW / 12)
       }
-      graphics.fill(this.decoColor)
+
+      graphics.fill(strapClr)
       graphics.rectMode(CENTER)
       graphics.rect(0, 0, this.actualW / 5, this.actualW / 4, 0, 0, this.actualW / 20, this.actualW / 20)
       graphics.fill(bagClr)
@@ -774,7 +816,7 @@ class SoftBody {
     }
     let blinkScale = ((frameCount) % 150 < 5 || (frameCount) % 455 < 5) ? 0.1 : 1
     this.eyeAngleLerp = lerp(this.eyeAngleLerp, eyeAngle, 0.05)
-
+    graphics.stroke(this.eyesStrokeClr)
     if (this.eyesType == "Ellipse") {
       graphics.push();
       graphics.translate(this.eyesP[0].x, this.eyesP[0].y)
@@ -782,7 +824,7 @@ class SoftBody {
       // graphics.fill(255)
       // graphics.ellipse(0, 0, this.eyesDist * 1.5, this.eyesDist * 1.8)
 
-      // graphics.fill("#282828")
+      // graphics.fill(strokeColor)
       // graphics.rotate(-(bodyAngle))
       // graphics.rotate(eyeAngle)
       // graphics.translate(this.eyesDist * 0.25, 0)
@@ -794,7 +836,7 @@ class SoftBody {
       });
       graphics.fill(255)
       graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
-      graphics.fill("#282828")
+      graphics.fill(strokeColor)
       graphics.noStroke()
       graphics.rotate(-(bodyAngle))
       graphics.rotate(this.eyeAngleLerp)
@@ -802,6 +844,12 @@ class SoftBody {
       graphics.ellipse(0, 0, eyeBase * 1.1, eyeBase * 1.2)
       graphics.pop();
       graphics.noFill()
+      if (this.isBodyBlack) {
+        graphics.stroke(this.eyesStrokeClr)
+        graphics.strokeWeight(this.radius / 80)
+      } else {
+        graphics.stroke(strokeColor)
+      }
       graphics.ellipse(0, 0, eyeBase * 1.5, eyeBase * 1.8)
       graphics.pop();
 
@@ -815,7 +863,7 @@ class SoftBody {
       });
       graphics.fill(255)
       graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
-      graphics.fill("#282828")
+      graphics.fill(strokeColor)
       graphics.noStroke()
       graphics.rotate(-(bodyAngle))
       graphics.rotate(this.eyeAngleLerp)
@@ -823,6 +871,12 @@ class SoftBody {
       graphics.ellipse(0, 0, eyeBase * 1.1, eyeBase * 1.2)
       graphics.pop();
       graphics.noFill()
+      if (this.isBodyBlack) {
+        graphics.stroke(this.eyesStrokeClr)
+        graphics.strokeWeight(this.radius / 80)
+      } else {
+        graphics.stroke(strokeColor)
+      }
       graphics.ellipse(0, 0, eyeBase * 1.5, eyeBase * 1.8)
       graphics.pop();
 
@@ -839,7 +893,7 @@ class SoftBody {
         });
         graphics.fill(255)
         graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
-        graphics.fill("#282828")
+        graphics.fill(strokeColor)
         graphics.noStroke()
         graphics.rotate(-(bodyAngle))
         graphics.rotate(this.eyeAngleLerp)
@@ -848,6 +902,12 @@ class SoftBody {
         graphics.pop();
         //outline
         graphics.noFill()
+        if (this.isBodyBlack) {
+          graphics.stroke(this.eyesStrokeClr)
+          graphics.strokeWeight(this.radius / 80)
+        } else {
+          graphics.stroke(strokeColor)
+        }
         graphics.ellipse(0, 0, eyeBase * 1.5, eyeBase * 1.5)
         graphics.pop();
       }
@@ -865,7 +925,7 @@ class SoftBody {
         });
         graphics.fill(255)
         graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
-        graphics.fill("#282828")
+        graphics.fill(strokeColor)
         graphics.noStroke()
         graphics.rotate(-(bodyAngle))
         graphics.rotate(this.eyeAngleLerp)
@@ -874,6 +934,12 @@ class SoftBody {
         graphics.pop();
         //outline
         graphics.noFill()
+        if (this.isBodyBlack) {
+          graphics.stroke(this.eyesStrokeClr)
+          graphics.strokeWeight(this.radius / 80)
+        } else {
+          graphics.stroke(strokeColor)
+        }
         graphics.ellipse(0, 0, eyeBase * 1.5, eyeY)
         graphics.pop();
       }
@@ -890,7 +956,7 @@ class SoftBody {
         });
         graphics.fill(255)
         graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
-        graphics.fill("#282828")
+        graphics.fill(strokeColor)
         graphics.noStroke()
         graphics.rotate(-(bodyAngle))
         graphics.rotate(this.eyeAngleLerp)
@@ -899,6 +965,12 @@ class SoftBody {
         graphics.pop();
         //outline
         graphics.noFill()
+        if (this.isBodyBlack) {
+          graphics.stroke(this.eyesStrokeClr)
+          graphics.strokeWeight(this.radius / 80)
+        } else {
+          graphics.stroke(strokeColor)
+        }
         graphics.arc(0, 0, eyeBase * 1.5, eyeBase * 1.5, PI - PI / 8, PI / 8, CHORD)
         graphics.pop();
       }
@@ -915,7 +987,7 @@ class SoftBody {
         });
         graphics.fill(255)
         graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
-        graphics.fill("#282828")
+        graphics.fill(strokeColor)
         graphics.noStroke()
         graphics.rotate(-(bodyAngle))
         graphics.rotate(this.eyeAngleLerp)
@@ -924,12 +996,26 @@ class SoftBody {
         graphics.pop();
         //outline
         graphics.noFill()
+        if (this.isBodyBlack) {
+          graphics.stroke(this.eyesStrokeClr)
+          graphics.strokeWeight(this.radius / 80)
+        } else {
+          graphics.stroke(strokeColor)
+        }
         graphics.arc(0, 0, eyeBase * 1.5, eyeBase * 1.5, -PI / 8, PI + PI / 8, CHORD)
         graphics.pop();
       }
     } else if (this.eyesType == "Bright") {
       let eyeSize = map(this.eyeSizeRandom, 0, 1, eyeBase * 0.8, eyeBase * 1.1)
+      let fillTemp = color(255)
+      //set eyes stroke white when body is black
+      if (this.bodyColor == "#1e1f1f" && !this.isDouble) {
+        fillTemp = color("#1e1f1f")
+      }
+      if (this.bodyColor2 == "#1e1f1f" && this.isDouble) {
+        fillTemp = color("#1e1f1f")
 
+      }
       for (let i = 0; i < 2; i++) {
         let eyeSize = eyeBase * map(this.eyeSizeRandom, 0, 1, 0.75, 1)
         graphics.push();
@@ -940,9 +1026,8 @@ class SoftBody {
         graphics.clip(() => {
           graphics.ellipse(0, 0, eyeSize * 1, eyeSize * 1.1)
         });
-        graphics.fill(255)
+        graphics.fill(fillTemp)
         graphics.ellipse(0, 0, eyeSize * 1.8, eyeSize * 1.8)
-        graphics.stroke("#282828")
         graphics.strokeWeight(this.radius * 0.05)
         graphics.noFill()
         graphics.rotate(-(bodyAngle))
@@ -971,7 +1056,7 @@ class SoftBody {
         });
         graphics.fill(255)
         graphics.ellipse(0, 0, eyeBase * 1.8, eyeBase * 1.8)
-        graphics.fill("#282828")
+        graphics.fill(strokeColor)
         graphics.noStroke()
         // graphics.rotate(-(bodyAngle))
         // graphics.rotate(this.eyeAngleLerp)
@@ -987,6 +1072,12 @@ class SoftBody {
         graphics.pop();
         //outline
         graphics.noFill()
+        if (this.isBodyBlack) {
+          graphics.stroke(this.eyesStrokeClr)
+          graphics.strokeWeight(this.radius / 80)
+        } else {
+          graphics.stroke(strokeColor)
+        }
         graphics.ellipse(0, 0, eyeBase * 1.5, eyeBase * 1.5)
         graphics.pop();
       }
@@ -1006,7 +1097,7 @@ class SoftBody {
       graphics.translate(0, this.radius / 20)
       graphics.strokeCap(ROUND);
       graphics.strokeWeight(size * 1.6)
-      graphics.stroke("#9F5F42")
+      graphics.stroke("#CD5C28")
       graphics.noFill()
       graphics.arc(0, -size / 2, size * 10, hh, PI / 16 + PI, PI * 15 / 16 + PI)
       graphics.arc(0, size / 2, size * 10, hh, PI / 16 + PI, PI * 15 / 16 + PI)
@@ -1048,9 +1139,9 @@ class SoftBody {
       graphics.line(-size * 2, 0, 0, -size)
       graphics.line(0, -size, size * 2, 0)
     } else if (this.mouthType == "Monster") {
-      let size = this.radius * 0.05
+      let size = this.actualW * 0.05
       let w = map(sin(bodyTop.y / 50), 0, 1, 0.5, 1)
-      let teethH = map(sin(bodyTop.y / 50), 0, 1, size * 0.7, size * 1.1)
+      let teethH = map(sin(bodyTop.y / 50), 0, 1, size * 0.9, size * 1.3)
 
       graphics.rotate(sin(bodyTop.y / 40) / 3)
       graphics.line(-size * 3, -size * 0.25, size * 3, -size * 0.25)
@@ -1080,18 +1171,18 @@ class SoftBody {
       graphics.rotate(bodyAngle)
       graphics.translate(0, this.radius / 15);
       // graphics.rotate(bodyAngle);
-      graphics.stroke("#282828");
+      graphics.stroke(strokeColor);
       graphics.strokeWeight(this.radius / 30);
 
-      graphics.fill(random(colors));
+      graphics.fill(random(this.shuffledColors));
       graphics.arc(0, 0, s * 5, s * 5, PI, 0);
-      graphics.fill(random(colors));
+      graphics.fill(random(this.shuffledColors));
       graphics.arc(0, 0, s * 3, s * 5, PI, 0);
-      graphics.fill(random(colors));
+      graphics.fill(random(this.shuffledColors));
       graphics.arc(0, 0, s, s * 5, PI, 0);
 
       graphics.strokeCap(ROUND);
-      graphics.fill(random(colors));
+      graphics.fill(random(this.shuffledColors));
       // graphics.strokeWeight(6);
       graphics.rectMode(CENTER)
       graphics.rect(0, s * 0.3, s * 6, s * 0.6, s * 0.3)
@@ -1101,7 +1192,7 @@ class SoftBody {
 
       graphics.translate(0, -s * 3.5)
       graphics.rotate(PI / 2 + r)
-      graphics.fill(random(colors));
+      graphics.fill(random(this.shuffledColors));
       graphics.strokeWeight(this.radius / 50);
 
       graphics.beginShape();
@@ -1311,7 +1402,6 @@ class SoftBody {
       graphics.translate(bodyTop.x, bodyTop.y)
       graphics.rotate(bodyAngle)
       graphics.strokeWeight(this.radius / 30)
-      graphics.fill(this.hairColor)  //headwear clr
       graphics.strokeJoin(ROUND);
 
       // graphics.arc(0, 0, r, r * 4, PI / 2, -PI / 2)
@@ -1325,6 +1415,7 @@ class SoftBody {
       graphics.curveVertex(0, -r * 4)
       graphics.endShape()
 
+      graphics.fill(this.hairColor)  //headwear clr
       graphics.translate(0, -r * 4)
       graphics.push()
       graphics.rotate(angle2)
@@ -1396,7 +1487,7 @@ class SoftBody {
       // hair
       let arr = [];
       graphics.noStroke()
-      graphics.fill("#282828")
+      graphics.fill(strokeColor)
       for (let j = 0; j < 50; j++) {
         graphics.push()
         graphics.strokeWeight(map(noise(j * 5, 90 + j * 3), 0, 1, this.radius / 50, this.radius / 130))
@@ -1529,6 +1620,15 @@ function setup() {
   shuffledColors2 = random(allColorsArr).slice().sort((a, b) => random() - 0.5);
   bgClr = shuffledColors2.slice(0, 3);
 
+  let headwearTemp = random(headwear)
+  let shapeTemp = random(shape)
+
+  //reselct fruit shape pairing
+  if (shapeTemp != "Circle" && shapeTemp != "HorizontalEllipse" && shapeTemp != "Diamond") {
+    while (headwearTemp == "Fruit") {
+      headwearTemp = random(headwear)
+    }
+  }
   obj = new SoftBody({
     shuffledColors: shuffledColors,
     removeBodyColors: removeBodyColors,
@@ -1553,11 +1653,10 @@ function setup() {
     isDouble: random([0, 1]),
     eyesType: random(eyesType),
     mouthType: random(mouthType),
-    headwear: random(headwear),
+    headwear: headwearTemp,
+    // headwear: random(headwear),
     // shape: "Circle",
-    shape: random(shape),
-    // headwear: "N",
-    // accessories: "Ear",
+    shape: shapeTemp,
     accessories: random(accessories),
     // bodySize: "Large"
     bodySize: random(bodySize)
@@ -1625,6 +1724,25 @@ function draw() {
     drawWave(655, 30, 100, -height / 3, PI / 20, lerpColor(bgClr2, color(255), 0.2), originalGraphics)
     bgClr3.setAlpha(200)
     drawWave(454, 8, 20, -height / 4, 0, bgClr3, originalGraphics)
+    originalGraphics.pop()
+  } else if (finalBackground == 'Curve') {
+    originalGraphics.push()
+
+    bgClr1 = lerpColor(bgClr1, color(255), 0.9)
+
+    originalGraphics.background(bgClr1);
+
+    originalGraphics.noStroke()
+    let bgClr2Alpha = color(bgClr[1])
+    bgClr2Alpha.setAlpha(80)
+
+    drawWave2(1213, 10, map(noise(id, id * 25), 0, 1, 90, 110), -height / 1.5, 0, bgClr2Alpha, originalGraphics)
+    drawWave2(435, 10, map(noise(id * 213, id * 135), 0, 1, 130, 170), -height / 2, -PI / 12, lerpColor(bgClr2, color(255, 100), 0.5), originalGraphics)
+    drawWave2(655, 30, map(noise(id * 1334, id * 312), 0, 1, 80, 120), -height / 3, -PI / 20, lerpColor(bgClr2, color(255, 100), 0.3), originalGraphics)
+    bgClr2Alpha.setAlpha(60)
+    drawWave2(655, 30, map(noise(id * 1739, id * 658), 0, 1, 80, 120), -height / 3, PI / 18, lerpColor(bgClr2, color(255, 100), 0.2), originalGraphics)
+    bgClr3.setAlpha(150)
+    drawWave2(454, 8, 20, -height / 4, 0, bgClr3, originalGraphics)
     originalGraphics.pop()
   } else if (finalBackground == 'Grid') {
     originalGraphics.push()
@@ -1738,14 +1856,32 @@ function drawWave(id, seg, amp, yPos, angle, clr, graphics) {
   graphics.translate(width / 2, height)
   graphics.rotate(angle)
   graphics.beginShape()
-  graphics.curveVertex(-width, 0)
-  graphics.curveVertex(-width, 0)
+  graphics.curveVertex(-width, height / 2)
+  graphics.curveVertex(-width, height / 2)
   for (let x = -width; x < width; x += width / seg) {
     graphics.curveVertex(x,
       yPos - noise(x / 100, id + x / 200) * amp)
   }
-  graphics.curveVertex(width, 0)
-  graphics.curveVertex(-width, 0)
+  graphics.curveVertex(width, height / 2)
+  graphics.curveVertex(-width, height / 2)
+  graphics.endShape()
+  graphics.pop()
+}
+
+function drawWave2(id, seg, amp, yPos, angle, clr, graphics) {
+  graphics.push()
+  graphics.fill(clr)
+  graphics.translate(width / 2, height)
+  graphics.rotate(angle)
+  graphics.beginShape()
+  graphics.curveVertex(-width, -height / 2)
+  graphics.curveVertex(-width, -height / 2)
+  for (let x = -width; x < width; x += width / seg) {
+    graphics.curveVertex(x,
+      yPos - noise(x / 100, id + x / 200) * amp)
+  }
+  graphics.curveVertex(width, -height / 2)
+  graphics.curveVertex(-width, -height / 2)
   graphics.endShape()
   graphics.pop()
 }
