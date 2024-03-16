@@ -138,6 +138,80 @@ float noise(vec2 p, float freq ){
 			return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);
 	}
 
+float aastep(float threshold, float value) {
+    // float afwidth = length(vec2(dFdx(value), dFdy(value))) * 0.70710678118654757;
+    // return smoothstep(threshold-afwidth, threshold+afwidth, value);
+	return step(threshold, value);
+}
+
+	vec3 halftone(vec3 texcolor, vec2 st, float frequency) {
+//   float n = 0.1; // Fractal noise
+  float n = 0.1*cnoise(vec3(st*200.0,1.0)); // Fractal noise
+  n += 0.05*cnoise(vec3(st*400.0,1.0));
+  n += 0.025*cnoise(vec3(st*800.0,1.0));
+  vec3 white = vec3(n*0.2 + 0.97);
+  vec3 black = vec3(n + 0.0);
+
+  // Perform a rough RGB-to-CMYK conversion
+  vec4 cmyk;
+  cmyk.xyz = 1.0 - texcolor;
+  cmyk.w = min(cmyk.x, min(cmyk.y, cmyk.z)); // Create K
+  cmyk.xyz -= cmyk.w; // Subtract K equivalent from CMY
+
+  // Distance to nearest point in a grid of
+  // (frequency x frequency) points over the unit square
+  vec2 Kst = frequency*mat2(0.707, -0.707, 0.707, 0.707)*st;
+  vec2 Kuv = 2.0*fract(Kst)-1.0;
+  float k = aastep(0.0, sqrt(cmyk.w)-length(Kuv)+n);
+  vec2 Cst = frequency*mat2(0.966, -0.259, 0.259, 0.966)*st;
+  vec2 Cuv = 2.0*fract(Cst)-1.0;
+  float c = aastep(0.0, sqrt(cmyk.x)-length(Cuv)+n);
+  vec2 Mst = frequency*mat2(0.966, 0.259, -0.259, 0.966)*st;
+  vec2 Muv = 2.0*fract(Mst)-1.0;
+  float m = aastep(0.0, sqrt(cmyk.y)-length(Muv)+n);
+  vec2 Yst = frequency*st; // 0 deg
+  vec2 Yuv = 2.0*fract(Yst)-1.0;
+  float y = aastep(0.0, sqrt(cmyk.z)-length(Yuv)+n);
+
+  vec3 rgbscreen = 1.0 - 0.9*vec3(c,m,y) + n;
+  return mix(rgbscreen, black, 0.85*k + 0.3*n);
+}
+
+vec3 halftone(vec3 texcolor, vec2 st) {
+  return halftone(texcolor, st, 30.0);
+}
+vec3 CMYKtoRGB (vec4 cmyk) {
+    float c = cmyk.x;
+    float m = cmyk.y;
+    float y = cmyk.z;
+    float k = cmyk.w;
+
+    float invK = 1.0 - k;
+    float r = 1.0 - min(1.0, c * invK + k);
+    float g = 1.0 - min(1.0, m * invK + k);
+    float b = 1.0 - min(1.0, y * invK + k);
+    return clamp(vec3(r, g, b), 0.0, 1.0);
+}
+
+vec4 RGBtoCMYK (vec3 rgb) {
+    float r = rgb.r;
+    float g = rgb.g;
+    float b = rgb.b;
+    float k = min(1.0 - r, min(1.0 - g, 1.0 - b));
+    vec3 cmy = vec3(0.0);
+    float invK = 1.0 - k;
+    if (invK != 0.0) {
+        cmy.x = (1.0 - r - k) / invK;
+        cmy.y = (1.0 - g - k) / invK;
+        cmy.z = (1.0 - b - k) / invK;
+    }
+    return clamp(vec4(cmy, k), 0.0, 1.0);
+}
+
+// float rand(vec2 co){
+//   return fract(sin(dot(co.xy,vec2(12.9898,78.233))) * 43758.5453);
+// }
+
 `
 
 const frag = `
@@ -160,6 +234,7 @@ const frag = `
 	${frag_functions_default}
 
 	void main(){
+		vec2 st0 = var_vertTexCoord;
 		vec2 st = var_vertTexCoord;
 		// vec2 st = var_vertTexCoord.xy /u_resolution.xy;
         // st.x*= u_resolution.x / u_resolution.y;
@@ -168,12 +243,27 @@ const frag = `
 		st.y+=cnoise(vec3(st*1000.,1.))/400.;
 
 		vec3 color = vec3(st.x,st.y,1.0);
+		vec4 texColor0 = texture2D(u_tex,st0);
 		vec4 texColor = texture2D(u_tex,st);
 		
 		float d = distance(u_mouse,st);
 		color*=1.-d;
-		gl_FragColor= texColor;
+		// gl_FragColor=texColor;
+		// gl_FragColor=vec4( texColor.xyz+vec3( fract(sin(dot(st.xy,vec2(12.9898,78.233))) * 43758.5453) / 2. - .25)/2.,1.0);
+		gl_FragColor = vec4(halftone(texColor0.rgb, st,400.)*0.2+(texColor.rgb)*0.8,1.0);
+ vec4 cmykColor = RGBtoCMYK(texColor.rgb);
+		    vec3 rgbProof = CMYKtoRGB(cmykColor);
+		// gl_FragColor = vec4(rgbProof.xyz,1.0);
+		vec3 c=vec3(0.,1.,1.)*cmykColor.x;
+		vec3 m=vec3(1.,0.,1.)*cmykColor.y;
+		vec3 y=vec3(1.,1.,0.)*cmykColor.z;
+		vec3 k=vec3(0.,0.,0.)*cmykColor.w;
+
+		// gl_FragColor = vec4(c+m+y+k,1.0);
+		
+  		
 	}
+
 `
 
 
