@@ -20,33 +20,35 @@ let id
 let colors = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
 // let colors1 = ["#D0B75A", "#7AB1D0", "#83A87D", "#924349", "#F7B5B9"]
 var colors1 = "7b91e9-17c3b2-f5b800-ecf238-fa5a62".split("-").map(a => "#" + a)
-var colors2 = "0081af-ff2244-00abe7-eaba6b-2dc7ff-ead2ac".split("-").map(a => "#" + a)
-var colors3 = "c1a5a9-1d1a31-f08cae-4d2d52-9a4c95".split("-").map(a => "#" + a)
-var colors4 = "083d77-fa664a-ebebd3-f95738-f4d35e-ee964b".split("-").map(a => "#" + a)
+var colors2 = "f0c529-57acde-75b86a-913c43-f79ca2".split("-").map(a => "#" + a)
+var colors3 = "f07829-2c3fab-446b3e-cc5861-3ca0de".split("-").map(a => "#" + a)  //didnt adjust yet
+var colors4 = "f06429-4d866a-45cbe6-f0ca4d-45cbe6".split("-").map(a => "#" + a)
 //new colors
 // var colors5 = "#6C8C8C-#8C6D46-#D9AE79-#F2E8DF-#4a7a8c".split("-")
-var colors5 = "388c8c-8c591b-d9933f-f2dac4-2a728c".split("-").map(a => "#" + a)
+var colors5 = "f08a37-69c9bb-227d52-aae657-1653a8".split("-").map(a => "#" + a)
 // var colors6 = "#9FBFAD-#517354-#CFD982-#F2EBDC-#594432".split("-")
-var colors6 = "a3d6b9-3b693e-ccd968-f2e6cb-594432".split("-").map(a => "#" + a)
-var colors7 = "#154659-#32A69A-#BAD9C8-#F26A1B-#A63B32".split("-")
+var colors6 = "f0566b-6457c9-f5d42f-6457c9-f5d42f".split("-").map(a => "#" + a)
+var colors7 = "f78400-2c5694-f5e8a6-81a8e3-f5e8a6".split("-").map(a => "#" + a)
 // var colors8 = "#245473-#142F40-#8C6645-#D9B6A3-#A6877C".split("-")
-var colors8 = "26597a-0D4466-946032-ebbea7-bf835e".split("-").map(a => "#" + a)
+var colors8 = "78cac0-2c9094-146d70-146d70-f5dca6".split("-").map(a => "#" + a)
 // var colors9 = "#268C8C-#9EA663-#F2D8A7-#8C2F0D-#F2785C".split("-")
-var colors9 = "2da8a8-9aa63d-f2d296-a1350e-f2785c".split("-").map(a => "#" + a)
+var colors9 = "3692ca-f287b2-f7c044-f7c044-f287b2".split("-").map(a => "#" + a)//end here!
 var colors10 = "#3A5939-#F2ECD8-#D9A13B-#BF3F34-#732D2D".split("-")
 var colors11 = "ff4e00-8ea604-f5bb00-ec9f05-bf3100".split("-").map(a => "#" + a)
 var colors12 = "ffbe0b-fb5607-ff006e-8338ec-3a86ff-eee".split("-").map(a => "#" + a)
 var colors13 = "181717-B4B7BF-D0D3D9-59554D-262626".split("-").map(a => "#" + a)
-var allColorsArr = [colors1]
+var allColorsArr = [colors1, colors2, colors3, colors4, colors5, colors6, colors7, colors8]
+var allColorsArr = [colors9]
 var bgClr
+var shuffledColors, shuffledColors2
 // var allColorsArr = [colors1, colors2, colors3, colors4, colors5, colors6, colors7, colors8, colors9, colors10, colors11, colors12, colors13]
 
 
 let faceColor1, faceColor2, colliderColor1, colliderColor2, colliderColor3
 let eyesType = ['Ellipse', 'Circle', 'Squint', 'Half', 'HalfStare', 'Bright', 'Shiny'] //7
 let mouthType = ['Thick', 'Calm', 'Compressed', 'Cute', 'Smile', 'Unhappy', 'Monster']  //7
-let headwear = ['PropellerHat', 'Fruit', 'Stack', 'Beret', 'Curly', 'Tomato', 'BowTie', 'Leaf', 'OneCurly', 'Puffy', 'Bangs', 'Cat'] //11
-let accessories = ['TShirt', 'Shirt', 'Belt', 'SlingBag', 'LittleBag', 'Ring', 'Ear']  //6
+let headwear = ['PropellerHat', 'Fruit', 'Stack', 'Beret', 'Curly', 'Tomato', 'BowTie', 'Leaf', 'Ahoge', 'Oni', 'Bangs', 'Cat'] //11
+let accessories = ['TShirt', 'Shirt', 'Belt', 'CrossbodyBag', 'LittleBag', 'Ring', 'Ear']  //6
 let bodySize = ['Small', 'Medium', 'Large']
 let shape = ['Circle', 'HorizontalEllipse', 'VerticalEllipse', 'Heart', 'Square', 'Diamond']
 let bgStyle = ['Lines', 'Mountain', 'Grid', 'Frame', 'Spiral', 'Wavy']
@@ -161,15 +163,15 @@ class SoftBody {
     this.actualW = this.radius
     this.actualH = this.radius
     if (this.bodySize == "Small") {
-      let sMultiply = map(this.bodySizeRandom, 0, 1, 0.85, 0.9)
+      let sMultiply = map(this.bodySizeRandom, 0, 1, 0.9, 0.95)
       this.actualW = this.radius * sMultiply
       this.actualH = this.radius * sMultiply
     } else if (this.bodySize == "Medium") {
-      let sMultiply = map(this.bodySizeRandom, 0, 1, 1, 1.05)
+      let sMultiply = map(this.bodySizeRandom, 0, 1, 1.1, 1.2)
       this.actualW = this.radius * sMultiply
       this.actualH = this.radius * sMultiply
     } else if (this.bodySize == "Large") {
-      let sMultiply = map(this.bodySizeRandom, 0, 1, 1.3, 1.35)
+      let sMultiply = map(this.bodySizeRandom, 0, 1, 1.35, 1.4)
       this.actualW = this.radius * sMultiply
       this.actualH = this.radius * sMultiply
     }
@@ -379,6 +381,24 @@ class SoftBody {
     //     new Spring(bp, ip, 200)
     //   );
     // }
+
+    //color setting
+    while (this.bodyColor == this.bodyColor2) {
+      this.bodyColor2 = random(shuffledColors)
+      //print("bodyColor: ")
+    }
+    while (this.hairColor == this.bodyColor || this.hairColor == this.bodyColor2) {
+      this.hairColor = random(shuffledColors)
+      //print("hairColor: ")
+    }
+    while (this.decoColor == this.bodyColor || this.decoColor == this.bodyColor2) {
+      this.decoColor = random(shuffledColors)
+      //print("decoColor: ")
+    }
+    while (this.decoColor2 == this.bodyColor || this.decoColor2 == this.bodyColor2) {
+      this.decoColor2 = random(shuffledColors)
+      //print("decoColor2: ")
+    }
   }
   display(graphics) {
     let bodyRight, bodyCenter, bodyLeft, bodyTop, bodyLowerRight, eyeMid, lfAverage
@@ -624,7 +644,7 @@ class SoftBody {
       graphics.rect(0, this.actualH / 4, this.actualW * 0.3, this.actualH * 0.2)
       graphics.fill(beltClr)
       graphics.rect(0, this.actualH / 4, this.actualW * 0.15, this.actualH * 0.1)
-    } if (this.accessories == "SlingBag") {
+    } if (this.accessories == "CrossbodyBag") {
       let s = dist(bodyLeft.x, bodyLeft.y, bodyRight.x, bodyRight.y)
       let r = atan2(bodyLowerRight.x - bodyLeft.x, bodyLowerRight.y, bodyLeft.y)
       let bagClr = lerpColor(color(this.decoColor), (this.isDouble) ? color(this.bodyColor2) : color(this.bodyColor), 0.5)  //if double
@@ -1318,7 +1338,7 @@ class SoftBody {
 
       // graphics.ellipse(0, 0, r / 2)
       graphics.pop()
-    } else if (this.headwear == "OneCurly") {
+    } else if (this.headwear == "Ahoge") {
       let r = this.radius / 20
       let angle = map(sin(bodyTop.y / 30 + bodyTop.x / 20), 0, 1, -PI / 18, -PI / 9)
       let h = map(this.hairSizeRandom, 0, 1, r / 2, r)
@@ -1354,7 +1374,7 @@ class SoftBody {
 
       // graphics.ellipse(0, 0, r / 2)
       graphics.pop()
-    } else if (this.headwear == "Puffy") {
+    } else if (this.headwear == "Oni") {
       let r = this.radius / 20
       let angle = map(sin(bodyTop.y / 30 + bodyTop.x / 20), 0, 1, -PI / 18, -PI / 9)
       let h = map(this.hairSizeRandom, 0, 1, r / 2, r)
@@ -1503,10 +1523,10 @@ function setup() {
   colliderColor3 = random(colors1)
 
   let size = width * 0.31
-  let shuffledColors = random(allColorsArr).slice().sort((a, b) => random() - 0.5);
+  shuffledColors = random(allColorsArr).slice().sort((a, b) => random() - 0.5);
   let removeBodyColors = shuffledColors.slice(2);
 
-  let shuffledColors2 = random(allColorsArr).slice().sort((a, b) => random() - 0.5);
+  shuffledColors2 = random(allColorsArr).slice().sort((a, b) => random() - 0.5);
   bgClr = shuffledColors2.slice(0, 3);
 
   obj = new SoftBody({
@@ -1534,18 +1554,20 @@ function setup() {
     eyesType: random(eyesType),
     mouthType: random(mouthType),
     headwear: random(headwear),
+    // shape: "Circle",
     shape: random(shape),
     // headwear: "N",
-    // accessories: "LittleBag",
+    // accessories: "Ear",
     accessories: random(accessories),
+    // bodySize: "Large"
     bodySize: random(bodySize)
   })
   obj.init()
 
-  finalBackground = "Wavy"
+  // finalBackground = "Wavy"
   bgRandom = random(1)
   id = random(10000000)
-  // finalBackground=random(bgStyle)
+  finalBackground = random(bgStyle)
 }
 
 
